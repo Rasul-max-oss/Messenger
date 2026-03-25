@@ -55,7 +55,34 @@ def get_db():
 
 
 @app.get('/register_page')
-def register_page(request: Request, db: Session= Depends(get_db)):
+def register_page(request: Request, db: Session = Depends(get_db)):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
+@app.post('/register')
+def register(
+    username: str = Form(...),
+    number: int = Form(...),
+    adders: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    # Проверка, существует ли пользователь с таким номером
+    existing = db.query(User).filter(User.number == number).first()
+    if existing:
+        return {"error": "Пользователь с таким номером уже существует"}
+    
+    # Создание нового пользователя
+    new_user = User(
+        username=username,
+        number=number,
+        adders=adders,
+        avatar="/static/default_avatar.png"
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return RedirectResponse(url="/login_page", status_code=303)
 
 
 
