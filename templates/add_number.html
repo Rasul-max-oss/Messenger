@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Найти собеседника | Messenger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .search-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .icon-header {
+            font-size: 50px;
+            color: #4A90E2;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+            margin-left: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4A90E2;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #357ABD;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #777;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: #4A90E2;
+        }
+    </style>
+</head>
+<body>
+
+<div class="search-container">
+    <div class="icon-header">
+        <i class="fa-solid fa-comments"></i>
+    </div>
+    <h2>Найти друга</h2>
+    <p>Введите данные пользователя, чтобы начать общение</p>
+
+    <form action="/add_number" method="POST">
+
+        <div class="form-group">
+            <label>Имя (как записать в контакты)</label>
+            <input type="text" name="name" placeholder="Например: Иван" required>
+        </div>
+
+        <div class="form-group">
+            <label>Номер телефона</label>
+            <input type="number" name="number" placeholder="79001234567" required>
+        </div>
+
+        <button type="submit">Создать диалог</button>
+    </form>
+
+    <a href="/profile" class="back-link"><i class="fa-solid fa-arrow-left"></i> Назад в профиль</a>
+</div>
+
+</body>
+</html>

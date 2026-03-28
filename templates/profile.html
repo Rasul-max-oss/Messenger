@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Профиль | Messenger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --danger-color: #ff4d4d;
+            --bg-color: #f0f2f5;
+            --text-main: #333;
+            --text-secondary: #777;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        /* Верхняя часть с градиентом */
+        .header-bg {
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            height: 120px;
+            position: relative;
+        }
+
+        .profile-main {
+            padding: 0 20px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .avatar-container {
+            position: relative;
+            margin-top: -60px; /* Наползает на хедер */
+            display: inline-block;
+        }
+
+        .avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin: 10px 0 5px;
+            color: var(--text-main);
+            font-size: 24px;
+        }
+
+        .status {
+            color: #2ecc71;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        /* Меню действий */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            padding: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn i { margin-right: 8px; }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #f0f2f5;
+            color: var(--text-main);
+        }
+
+        .btn:active { transform: scale(0.95); }
+
+        /* Списки инфо */
+        .info-list {
+            text-align: left;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .info-row i {
+            width: 35px;
+            height: 35px;
+            background: #f0f7ff;
+            color: var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .info-content label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .info-content span {
+            font-size: 15px;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .logout-link {
+            display: block;
+            margin-top: 20px;
+            color: var(--danger-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-bg"></div>
+
+    <div class="profile-main">
+        <div class="avatar-container">
+            <img src="{{ user.avatar }}" alt="Аватар" class="avatar">
+        </div>
+
+        <h2>{{ user.username }}</h2>
+        <div class="status"><i class="fa-solid fa-circle"></i> В сети</div>
+
+        <div class="action-buttons">
+            <a href="/add_number_page" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Новый чат
+            </a>
+            <a href="/chats" class="btn btn-secondary">
+                <i class="fa-solid fa-message"></i> Мои чаты
+            </a>
+        </div>
+
+        <div class="info-list">
+            <div class="info-row">
+                <i class="fa-solid fa-phone"></i>
+                <div class="info-content">
+                    <label>Номер телефона</label>
+                    <span>+{{ user.number }}</span>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <i class="fa-solid fa-location-dot"></i>
+                <div class="info-content">
+                    <label>Адрес</label>
+                    <span>{{ user.adders }}</span>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <i class="fa-solid fa-id-badge"></i>
+                <div class="info-content">
+                    <label>Ваш ID</label>
+                    <span>{{ user.id }}</span>
+                </div>
+            </div>
+        </div>
+
+        <a href="/logout" class="logout-link">
+            <i class="fa-solid fa-right-from-bracket"></i> Выйти из профиля
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
