@@ -116,6 +116,34 @@ def logout():
     return response
 
 
+@app.get('/chats')
+def chats_page(request: Request, db: Session = Depends(get_db)):
+    # Получаем user_id из cookies
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return RedirectResponse("/login_page", status_code=303)
+
+    current_user_id = int(user_id)
+    
+    # Получаем все чаты, где участвует текущий пользователь
+    chats = db.query(Chat).filter(
+        or_(Chat.user1_id == current_user_id, Chat.user2_id == current_user_id)
+    ).all()
+    
+    # Для каждого чата находим собеседника
+    chats_with_partners = []
+    for chat in chats:
+        # Если current_user_id == user1_id, то собеседник — user2_id, и наоборот
+        partner_id = chat.user2_id if chat.user1_id == current_user_id else chat.user1_id
+        partner = db.query(User).filter(User.id == partner_id).first()
+        chats_with_partners.append((chat, partner))
+    
+    return templates.TemplateResponse("chats.html", {
+        "request": request,
+        "chats": chats_with_partners
+    })
+
+
 @app.get('/add_number_page')
 def add_number_page(request: Request, db: Session = Depends(get_db)):
     user_id = request.cookies.get("user_id")
@@ -181,5 +209,27 @@ def send_message(
 
     # возвращаем обратно в чат
     return RedirectResponse(f'/chat/{chat_id}', status_code=303)
+
+
+@app.get('/settings_page')
+def settings_page(request: Request,db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return RedirectResponse("/login_page", status_code=303)
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if not user:
+        return RedirectResponse("/login_page", status_code=303)
+
+    return templates.TemplateResponse('/settings.html',{"request": request,"user": user})
+
+
+
+
+
+
+
+
+
 
 
