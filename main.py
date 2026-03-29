@@ -183,4 +183,3 @@ def send_message(
     return RedirectResponse(f'/chat/{chat_id}', status_code=303)
 
 
-print("hi")

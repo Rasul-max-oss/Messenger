@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои чаты | Messenger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --white: #ffffff;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--text-color);
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .btn-back {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .btn-back:hover {
+            transform: translateX(-5px);
+        }
+
+        .chat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 15px;
+            background: #fff;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .chat-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+            background-color: #fdfdfd;
+        }
+
+        .chat-item img {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid #eee;
+        }
+
+        .chat-info {
+            flex-grow: 1;
+        }
+
+        .chat-info .username {
+            display: block;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #222;
+        }
+
+        .chat-info .status {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .btn-open {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .chat-item:hover .btn-open {
+            background-color: #357abd;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Адаптивность для мобилок */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/profile" class="btn-back"><i class="fas fa-arrow-left"></i> В профиль</a>
+        <h2><i class="fas fa-comments"></i> Мои чаты</h2>
+
+        <div class="chat-list">
+            {% if chats %}
+              {% for chat in chats %}
+                  {# Логика определения собеседника: если user1 это не я, значит он партнер #}
+                  {% set partner = chat.user1 if chat.user1_id != user.id else chat.user2 %}
+
+                  <a href="/chat/{{ chat.id }}" class="chat-item">
+                      <img src="{{ partner.avatar if partner.avatar else 'https://via.placeholder.com/55' }}" alt="avatar">
+                      <div class="chat-info">
+                          <span class="username">{{ partner.username }}</span>
+                          <span class="status">Нажмите, чтобы открыть диалог</span>
+                      </div>
+                      <div class="btn-open">Открыть</div>
+                  </a>
+              {% endfor %}
+          {% else %}
+              <div class="empty-state">
+                  <i class="far fa-comment-dots"></i>
+                  <p>У вас пока нет активных чатов.</p>
+              </div>
+          {% endif %}
+        </div>
+    </div>
+</body>
+</html>
