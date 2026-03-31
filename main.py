@@ -223,6 +223,22 @@ def settings_page(request: Request,db: Session = Depends(get_db)):
 
     return templates.TemplateResponse('/settings.html',{"request": request,"user": user})
 
+@app.post('/settings')
+def settings(request: Request,name: str = Form(None),password: str = Form(None),avatar: str = Form(None),db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    user = db.query(User).filter(User.id == int(user_id)).first()
+
+    if user:
+        if name:
+            user.username = name
+        if password:
+            user.password = int(password)
+        if avatar:
+            user.avatar = avatar
+        db.commit()
+
+
+    return RedirectResponse('/profile',status_code=303)
 
 
 

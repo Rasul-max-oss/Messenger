@@ -31,6 +31,7 @@
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            position: relative; /* Для позиционирования кнопки */
         }
 
         /* Верхняя часть с градиентом */
@@ -38,6 +39,22 @@
             background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
             height: 120px;
             position: relative;
+        }
+
+        /* Кнопка настроек в углу */
+        .settings-link {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 22px;
+            text-decoration: none;
+            transition: transform 0.3s ease, color 0.2s;
+        }
+
+        .settings-link:hover {
+            color: white;
+            transform: rotate(45deg);
         }
 
         .profile-main {
@@ -48,7 +65,7 @@
 
         .avatar-container {
             position: relative;
-            margin-top: -60px; /* Наползает на хедер */
+            margin-top: -60px;
             display: inline-block;
         }
 
@@ -74,7 +91,6 @@
             margin-bottom: 20px;
         }
 
-        /* Меню действий */
         .action-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -108,7 +124,6 @@
 
         .btn:active { transform: scale(0.95); }
 
-        /* Списки инфо */
         .info-list {
             text-align: left;
             border-top: 1px solid #eee;
@@ -158,7 +173,11 @@
 <body>
 
 <div class="container">
-    <div class="header-bg"></div>
+    <div class="header-bg">
+        <a href="/settings_page" class="settings-link" title="Настройки">
+            <i class="fa-solid fa-gear"></i>
+        </a>
+    </div>
 
     <div class="profile-main">
         <div class="avatar-container">
