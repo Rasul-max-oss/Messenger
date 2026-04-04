@@ -22,6 +22,7 @@ class User(Base):
     password = Column(String)
     adders = Column(String)
     avatar = Column(String)
+    description = Column(String,nullable=True)
 
 
 class Chat(Base):
@@ -224,7 +225,7 @@ def settings_page(request: Request,db: Session = Depends(get_db)):
     return templates.TemplateResponse('/settings.html',{"request": request,"user": user})
 
 @app.post('/settings')
-def settings(request: Request,name: str = Form(None),password: str = Form(None),avatar: str = Form(None),db: Session = Depends(get_db)):
+def settings(request: Request,name: str = Form(None),password: str = Form(None),avatar: str = Form(None),description:str = Form(None),db: Session = Depends(get_db)):
     user_id = request.cookies.get("user_id")
     user = db.query(User).filter(User.id == int(user_id)).first()
 
@@ -235,6 +236,8 @@ def settings(request: Request,name: str = Form(None),password: str = Form(None),
             user.password = int(password)
         if avatar:
             user.avatar = avatar
+        if description:
+            user.description = description
         db.commit()
 
 

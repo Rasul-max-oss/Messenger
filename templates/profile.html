@@ -2,231 +2,86 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой Профиль | Messenger</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Профиль {{ user.username }}</title>
     <style>
-        :root {
-            --primary-color: #4A90E2;
-            --danger-color: #ff4d4d;
-            --bg-color: #f0f2f5;
-            --text-main: #333;
-            --text-secondary: #777;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background: white;
-            width: 100%;
-            max-width: 400px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            position: relative; /* Для позиционирования кнопки */
-        }
-
-        /* Верхняя часть с градиентом */
-        .header-bg {
-            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-            height: 120px;
-            position: relative;
-        }
-
-        /* Кнопка настроек в углу */
-        .settings-link {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 22px;
-            text-decoration: none;
-            transition: transform 0.3s ease, color 0.2s;
-        }
-
-        .settings-link:hover {
-            color: white;
-            transform: rotate(45deg);
-        }
-
-        .profile-main {
-            padding: 0 20px 30px;
+        .profile-card {
+            max-width: 350px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
             text-align: center;
-            position: relative;
-        }
-
-        .avatar-container {
-            position: relative;
-            margin-top: -60px;
-            display: inline-block;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         .avatar {
-            width: 110px;
-            height: 110px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 5px solid white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 3px solid #007bff;
         }
 
-        h2 {
-            margin: 10px 0 5px;
-            color: var(--text-main);
-            font-size: 24px;
+        .user-description {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 10px;
+            padding: 0 10px;
+            font-style: italic;
+            line-height: 1.4;
+            word-wrap: break-word; /* Чтобы длинные слова не вылезали за края */
         }
 
-        .status {
-            color: #2ecc71;
-            font-size: 14px;
-            font-weight: 500;
+        .username {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 15px 0 5px 0;
+        }
+
+        .user-number {
+            font-size: 0.9rem;
+            color: #888;
             margin-bottom: 20px;
         }
 
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
         .btn {
-            padding: 12px;
-            border-radius: 12px;
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
             text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s, opacity 0.2s;
-        }
-
-        .btn i { margin-right: 8px; }
-
-        .btn-primary {
-            background-color: var(--primary-color);
+            border-radius: 5px;
+            background-color: #007bff;
             color: white;
-        }
-
-        .btn-secondary {
-            background-color: #f0f2f5;
-            color: var(--text-main);
-        }
-
-        .btn:active { transform: scale(0.95); }
-
-        .info-list {
-            text-align: left;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-
-        .info-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .info-row i {
-            width: 35px;
-            height: 35px;
-            background: #f0f7ff;
-            color: var(--primary-color);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-        }
-
-        .info-content label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .info-content span {
-            font-size: 15px;
-            color: var(--text-main);
-            font-weight: 500;
-        }
-
-        .logout-link {
-            display: block;
-            margin-top: 20px;
-            color: var(--danger-color);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header-bg">
-        <a href="/settings_page" class="settings-link" title="Настройки">
-            <i class="fa-solid fa-gear"></i>
-        </a>
+    <div class="profile-card">
+        <img src="{{ user.avatar }}" alt="Avatar" class="avatar">
+
+        {% if user.description %}
+            <div class="user-description">
+                {{ user.description }}
+            </div>
+        {% else %}
+            <div class="user-description">Описание не заполнено</div>
+        {% endif %}
+
+        <div class="username">{{ user.username }}</div>
+        <div class="user-number">@{{ user.number }}</div>
+
+        <hr>
+
+        <div style="margin-top: 15px;">
+            <a href="/chats" class="btn">Сообщения</a>
+            <a href="/settings_page" class="btn" style="background-color: #6c757d;">Настройки</a>
+            <br>
+            <a href="/logout" style="color: #dc3545; font-size: 0.8rem; display: block; margin-top: 10px;">Выйти из аккаунта</a>
+        </div>
     </div>
-
-    <div class="profile-main">
-        <div class="avatar-container">
-            <img src="{{ user.avatar }}" alt="Аватар" class="avatar">
-        </div>
-
-        <h2>{{ user.username }}</h2>
-        <div class="status"><i class="fa-solid fa-circle"></i> В сети</div>
-
-        <div class="action-buttons">
-            <a href="/add_number_page" class="btn btn-primary">
-                <i class="fa-solid fa-plus"></i> Новый чат
-            </a>
-            <a href="/chats" class="btn btn-secondary">
-                <i class="fa-solid fa-message"></i> Мои чаты
-            </a>
-        </div>
-
-        <div class="info-list">
-            <div class="info-row">
-                <i class="fa-solid fa-phone"></i>
-                <div class="info-content">
-                    <label>Номер телефона</label>
-                    <span>+{{ user.number }}</span>
-                </div>
-            </div>
-
-            <div class="info-row">
-                <i class="fa-solid fa-location-dot"></i>
-                <div class="info-content">
-                    <label>Адрес</label>
-                    <span>{{ user.adders }}</span>
-                </div>
-            </div>
-
-            <div class="info-row">
-                <i class="fa-solid fa-id-badge"></i>
-                <div class="info-content">
-                    <label>Ваш ID</label>
-                    <span>{{ user.id }}</span>
-                </div>
-            </div>
-        </div>
-
-        <a href="/logout" class="logout-link">
-            <i class="fa-solid fa-right-from-bracket"></i> Выйти из профиля
-        </a>
-    </div>
-</div>
 
 </body>
 </html>
