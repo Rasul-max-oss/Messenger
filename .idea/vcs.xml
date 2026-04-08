@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/Game" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/Js" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/Land" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/Messenger/Messenger" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/brnaches" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/fullstack" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/git" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/homework" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/hwt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/public" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/render" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FASTAPI__/temp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/flask/Chat" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/flask/Farmer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/flask/ShowUp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/flask/random" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/flask/todo-list" vcs="Git" />
+  </component>
+</project>

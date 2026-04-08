@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin orders!</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background-color: #f5f5f7;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background-color: #0a84ff;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f7ff;
+        }
+
+        .price {
+            font-weight: bold;
+            color: #0a84ff;
+        }
+
+        .date {
+            color: #555;
+        }
+
+        .empty {
+            text-align: center;
+            margin-top: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .flash-messages {
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            background-color: #ffe9a8;
+            padding: 12px 15px;
+            border-left: 5px solid #ffca3a;
+            border-radius: 8px;
+            color: #5a4a00;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+{% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for msg in messages %}
+                    <div>{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+{% endwith %}
+
+<h2>Заказы</h2>
+
+{% if orders %}
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Имя</th>
+                    <th>Телефон</th>
+                    <th>Адрес</th>
+                    <th>Сумма</th>
+                    <th>Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><strong>{{ order.id }}</strong></td>
+                    <td>{{ order.customer_name }}</td>
+                    <td>{{ order.phone }}</td>
+                    <td>{{ order.address }}</td>
+                    <td class="price">{{ "%.2f"|format(order.total) }} ₽</td>
+                    <td class="date">{{ order.created_at | format_datetime('Africa/Haifa', '%d.%m.%Y %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+{% else %}
+        <div class="empty">
+            <h3>📭 Нет заказов</h3>
+            <p>Пока никто не оформил покупку.</p>
+        </div>
+{% endif %}
+
+</body>
+</html>

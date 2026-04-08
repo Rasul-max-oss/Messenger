@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Библиотека</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f4f1ea;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #3e3e3e;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            margin: 0 auto 30px;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        form input, form button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        form button {
+            background-color: #5a4b3d;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        form button:hover {
+            background-color: #40342a;
+        }
+
+        .book-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .book-card {
+            background-color: #fff;
+            border-left: 6px solid #8c7051;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.05);
+            width: 250px;
+        }
+
+        .book-card p {
+            margin: 6px 0;
+            color: #333;
+        }
+
+        .no-books {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Добро пожаловать в Библиотеку</h1>
+    <h2>Добавьте новую книгу</h2>
+
+    <form method="POST" action="{{ url_for('add_book') }}">
+        <input type="text" name="name" placeholder="Название книги" required>
+        <input type="text" name="author" placeholder="Автор" required>
+        <input type="number" name="year" placeholder="Год выпуска" required>
+        <input type="number" name="page" placeholder="Количество страниц" required>
+        <input type="url" name="img" placeholder="Вставте ссылку изоброжение" required>
+        <button type="submit">Добавить книгу</button>
+    </form>
+
+    <h2>Список книг</h2>
+
+    {% if books %}
+    <div class="book-list">
+        {% for book in books %}
+        <div class="book-card">
+            <img src="{{ book.img }}" alt="Обложка книги {{ book.name }}" style="width:100%; height:auto; border-radius: 4px; margin-bottom: 10px;">
+            <p><strong>Название:</strong> {{ book.name }}</p>
+            <p><strong>Автор:</strong> {{ book.author }}</p>
+            <p><strong>Год выпуска:</strong> {{ book.year }}</p>
+            <p><strong>Страниц:</strong> {{ book.page }}</p>
+        </div>
+
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="no-books">В вашей библиотеке пока нет книг. Добавьте первую!</p>
+    {% endif %}
+
+</body>
+</html>

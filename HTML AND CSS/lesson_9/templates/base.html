@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>
+      {% block title %}{% endblock %}
+    </title>
+    <link rel="stylesheet" type= "text/css" href="../static/css/style.css">
+
+</head>
+<body>
+
+<ul>
+    <li><a data-text='главная' href="/">главная</a></li>
+    <li><a data-text="на вторую" href="/page_2/">на вторую</a></li>
+    <li><a data-text="About" href="/about/">About</a></li>
+</ul>
+
+
+<h3>{% block h3 %}{% endblock %}</h3>
+
+{% block content %}
+
+{% endblock %}
+
+</body>
+</html>

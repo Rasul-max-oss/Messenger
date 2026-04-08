@@ -1,0 +1,25 @@
+
+.arizona-wrapper {
+    position: relative;
+    min-height: 100vh;
+}
+.arizona-bg {
+    background: url('../images/black_russia_bg.jpg') center/cover no-repeat fixed;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.8;
+}
+.arizona-header {
+    background: rgba(192, 57, 43, 0.9);
+    padding: 20px;
+    color: white;
+    text-align: center;
+    font-size: 32px;
+}
+.arizona-footer {
+    text-align: center;
+    padding: 20px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+}

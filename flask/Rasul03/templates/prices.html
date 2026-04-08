@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Цены на автомобили</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #f7f7f7, #e3e3e3);
+            color: #333;
+        }
+
+        header {
+            background-color: #1e1e1e;
+            color: #fff;
+            text-align: center;
+            padding: 25px 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.6em;
+            color: #444;
+            margin-bottom: 40px;
+        }
+
+        .car-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .car-card:hover {
+            transform: scale(1.02);
+        }
+
+        .car-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .car-content {
+            padding: 20px 25px;
+        }
+
+        .car-title {
+            font-size: 1.4em;
+            color: #1a1a1a;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .car-description {
+            font-size: 1em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .car-price {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #bfa14b; /* золотой */
+        }
+
+        .car-price::before {
+            content: "💰 ";
+        }
+
+        .back-link {
+            display: block;
+            width: fit-content;
+            margin: 40px auto 60px;
+            padding: 12px 25px;
+            background-color: #1e1e1e;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .back-link:hover {
+            background-color: #333;
+            transform: scale(1.05);
+        }
+
+        footer {
+            text-align: center;
+            color: #777;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Редкие и дорогие автомобили</h1>
+</header>
+
+<main>
+    <h2>Тут вы узнаете цены на автомобили! В данном разделе находятся самые редкие и дорогие автомобили в мире.</h2>
+
+    <div class="car-card">
+        <img src="https://wieck-mbusa-production.s3.amazonaws.com/photos/a9ddcb6e17e59c758666643a760b2eee731ba673/preview-928x522.jpg" alt="Mercedes‑Benz 300 SLR">
+        <div class="car-content">
+            <div class="car-title">Mercedes‑Benz 300 SLR Uhlenhaut Coupe (1955)</div>
+            <div class="car-description">Построено всего 2 прототипа. Один из самых дорогих автомобилей в истории.</div>
+            <div class="car-price">142,000,000 $</div>
+        </div>
+    </div>
+
+    <div class="car-card">
+        <img src="https://www.amalgamcollection.com/cdn/shop/products/DSCF0744_4000x2677_crop_center.jpg?v=1706011400" alt="Ferrari 250 GTO">
+        <div class="car-content">
+            <div class="car-title">Ferrari 250 GTO (1962‑63)</div>
+            <div class="car-description">Легенда классических гонок. Крайне редкая модель с тиражом менее 40 штук.</div>
+            <div class="car-price">65,000,000 $</div>
+        </div>
+    </div>
+
+    <div class="car-card">
+        <img src="https://www.motaauto.com/wp-content/uploads/2024/03/Rolls-Royce-Arcadia-Droptail-2024-7.jpg" alt="Rolls‑Royce Droptail">
+        <div class="car-content">
+            <div class="car-title">Rolls‑Royce Droptail</div>
+            <div class="car-description">Серия из четырёх индивидуальных автомобилей. Эталон современного люкса.</div>
+            <div class="car-price">32,000,000 $</div>
+        </div>
+    </div>
+
+    <div class="car-card">
+        <img src="https://www.rolls-roycemotorcars.com/content/dam/rrmc/marketUK/rollsroycemotorcars_com/boat-tail---the-next-chapter/page_properties/01_RR_BOATTAIL-single-twin-card-min.jpg" alt="Rolls‑Royce Boat Tail">
+        <div class="car-content">
+            <div class="car-title">Rolls‑Royce Boat Tail</div>
+            <div class="car-description">Эксклюзивный дизайн, ограниченное производство. Роскошь ручной работы.</div>
+            <div class="car-price">28,000,000 $</div>
+        </div>
+    </div>
+
+    <div class="car-card">
+        <img src="https://di-uploads-pod20.dealerinspire.com/browardbugatti/uploads/2019/12/Bugatti-La-Voiture-Noire-34-View.jpg" alt="Bugatti La Voiture Noire">
+        <div class="car-content">
+            <div class="car-title">Bugatti La Voiture Noire</div>
+            <div class="car-description">Единственный экземпляр. Современная интерпретация легендарного Type 57 SC.</div>
+            <div class="car-price">19,000,000 $</div>
+        </div>
+    </div>
+
+    <div class="car-card">
+        <img src="https://i0.wp.com/asphalt9.info/wp-content/uploads/2021/09/Pagani-Zonda-HP-Barchetta.jpg?resize=1062%2C588&ssl=1" alt="Pagani Zonda HP Barchetta">
+        <div class="car-content">
+            <div class="car-title">Pagani Zonda HP Barchetta</div>
+            <div class="car-description">Эксклюзивная модель Pagani — редкость даже среди суперкаров.</div>
+            <div class="car-price">17,500,000 $</div>
+        </div>
+    </div>
+
+    <a href="/" class="back-link">⬅ Вернуться назад</a>
+</main>
+
+<footer>
+    © 2025 LuxAuto Market. Все права защищены.
+</footer>
+
+</body>
+</html>

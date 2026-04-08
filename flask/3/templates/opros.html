@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Опрос</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #FFB88C, #DE6262);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #DE6262;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 2px solid #DE6262;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #FFB88C;
+            box-shadow: 0 0 5px #FFB88C;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #DE6262;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ff8260;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #d40000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Форма опроса</h1>
+    <form method="POST">
+        <input type="text" name="name" placeholder="Введите полное имя">
+        <input type="text" name="school" placeholder="Что вы думаете о школе?">
+        <input type="text" name="why" placeholder="Почему вы так думаете?">
+        <button type="submit">Отправить</button>
+    </form>
+
+    {% if message %}
+        <div class="message">{{ message }}</div>
+    {% endif %}
+</div>
+
+</body>
+</html>

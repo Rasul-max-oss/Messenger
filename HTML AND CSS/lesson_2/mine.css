@@ -1,0 +1,10 @@
+body {
+  background-image: url('https://fotoblik.ru/wp-content/uploads/2023/09/stadion-aliants-arena-gazon-1-1.webp');
+  background-repeat: no-repeat;
+  background-size:  100%;
+}
+img {
+    border:5px;
+    height: 800px;
+    wight: 800px;
+}

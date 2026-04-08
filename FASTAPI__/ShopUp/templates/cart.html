@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Корзина</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --text:#1e293b;
+    --muted:#64748b;
+    --accent:#6366f1;
+    --danger:#ef4444;
+}
+
+body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+}
+
+.container{
+    max-width:1000px;
+    margin:40px auto;
+    padding:20px;
+}
+
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+}
+
+h1{
+    margin:0;
+}
+
+a{
+    text-decoration:none;
+    color:var(--muted);
+    font-weight:500;
+}
+
+.cart{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.item{
+    display:flex;
+    gap:20px;
+    background:var(--card);
+    padding:15px;
+    border-radius:16px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.05);
+    align-items:center;
+}
+
+.item img{
+    width:120px;
+    height:90px;
+    object-fit:cover;
+    border-radius:10px;
+}
+
+.info{
+    flex:1;
+}
+
+.name{
+    font-size:18px;
+    font-weight:600;
+}
+
+.price{
+    color:#10b981;
+    font-weight:600;
+}
+
+.qty{
+    color:var(--muted);
+    font-size:14px;
+}
+
+button{
+    border:none;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.2s;
+}
+
+.remove{
+    background:var(--danger);
+    color:white;
+}
+
+.remove:hover{
+    background:#dc2626;
+}
+
+.total-box{
+    margin-top:30px;
+    background:var(--card);
+    padding:20px;
+    border-radius:16px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.05);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.total{
+    font-size:20px;
+    font-weight:700;
+}
+
+.checkout{
+    background:var(--accent);
+    color:white;
+}
+
+.checkout:hover{
+    background:#4f46e5;
+}
+
+.empty{
+    text-align:center;
+    margin-top:100px;
+    color:var(--muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+    <h1>🛒 Корзина</h1>
+    <a href="/products">← Назад</a>
+</header>
+
+{% if items %}
+
+<div class="cart">
+
+    {% set total = 0 %}
+
+    {% for item in items %}
+    {% set product = products.get(item.product_id) %}
+
+    {% if product %}
+    <div class="item">
+
+        <img src="{{ product.img_url or 'https://via.placeholder.com/120x90' }}">
+
+        <div class="info">
+            <div class="name">{{ product.name }}</div>
+            <div class="price">{{ product.price }} ₽</div>
+            <div class="qty">Количество: {{ item.quantity }}</div>
+        </div>
+
+        <form action="/remove_from_cart" method="post">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <button class="remove">Удалить</button>
+        </form>
+
+    </div>
+
+    {% set total = total + (product.price * item.quantity) %}
+    {% endif %}
+
+    {% endfor %}
+
+</div>
+<form action="/order_page" method="get">
+    <div class="total-box">
+        <div class="total">Итого: {{ total }} ₽</div>
+        <button class="checkout" >Оформить заказ</button>
+    </div>
+</form>
+{% else %}
+
+<div class="empty">
+    <h2>Корзина пустая 🥲</h2>
+    <p>Добавь товары из каталога</p>
+</div>
+
+{% endif %}
+
+</div>
+
+</body>
+</html>

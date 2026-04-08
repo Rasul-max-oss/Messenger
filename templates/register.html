@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация пользователя</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* Чтобы padding не раздувал ширину */
+        }
+        input:focus {
+            border-color: #4A90E2;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #357ABD;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Создать аккаунт</h2>
+    <form action="/register" method="POST">
+
+        <div class="form-group">
+            <label for="username">Имя пользователя</label>
+            <input type="text" id="username" name="username" placeholder="Иван Иванов" required>
+        </div>
+
+        <div class="form-group">
+            <label for="number">Контактный номер</label>
+            <input type="number" id="number" name="number" placeholder="79001234567" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" placeholder="Пароль" required>
+        </div>
+
+
+        <div class="form-group">
+            <label for="adders">Адрес проживания</label>
+            <input type="text" id="adders" name="adders" placeholder="г. Москва, ул. Ленина, д. 1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="avatar">Ссылка на аватар (https://cdn-icons-png.flaticon.com/512/4837/4837857.png)</label>
+            <input type="url" id="avatar" name="avatar" placeholder="https://example.com/photo.jpg" required>
+        </div>
+
+        <button type="submit">Зарегистрироваться</button>
+
+        <a href="/login_page">Есть аккаунт? тыкай суда!</a>
+
+    </form>
+</div>
+
+</body>
+</html>

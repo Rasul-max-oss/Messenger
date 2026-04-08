@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Cart</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background-color: #f5f5f7;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .flash-messages {
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            background-color: #ffe9a8;
+            padding: 12px 15px;
+            border-left: 5px solid #ffca3a;
+            border-radius: 8px;
+            color: #5a4a00;
+            font-weight: 600;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
+        }
+
+        .cart-image {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #ddd;
+        }
+
+        .item-details h3 {
+            margin: 0 0 5px;
+            color: #333;
+        }
+
+        .item-price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #0a84ff;
+        }
+
+        .total {
+            font-size: 1.5rem;
+            text-align: right;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .btn {
+            background-color: #0a84ff;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #006edc;
+        }
+
+        .back {
+            margin-left: 12px;
+            text-decoration: none;
+            color: #0a84ff;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .back:hover {
+            color: #006edc;
+        }
+
+        .empty-cart {
+            text-align: center;
+            background: white;
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .empty-cart p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+{% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for msg in messages %}
+                    <div>{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+{% endwith %}
+
+{% if products %}
+        {% for product in products %}
+            <div class="cart-item">
+                {% if product.image_url %}
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="cart-image">
+                {% else %}
+                    <div class="cart-image" style="display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">Нет фото</div>
+                {% endif %}
+                <div class="item-details">
+                    <h3>{{ product.name }}</h3>
+                    <div class="item-price">{{ "%.2f"|format(product.price) }} ₽</div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="total">Итого: {{ "%.2f"|format(total) }} ₽</div>
+
+        <div style="text-align: right;">
+            <a href="/checkout" class="btn">Оформить заказ</a>
+            <a href="/" class="back">← Вернуться к товарам</a>
+        </div>
+{% else %}
+        <div class="empty-cart">
+            <p>Ваша корзина пуста 😢</p>
+            <a href="/" class="back">Выбрать товары</a>
+        </div>
+{% endif %}
+
+</body>
+</html>

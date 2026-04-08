@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Современный словарь</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f6fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            min-width: 200px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #7b61ff;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #7b61ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #684ce0;
+            transform: scale(1.05);
+        }
+
+        .pair {
+            background-color: #ffffff;
+            border: 1px solid #e0e6ed;
+            border-left: 6px solid #7b61ff;
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .key {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .value {
+            color: #555;
+            margin-left: 10px;
+            flex-grow: 1;
+            margin-right: 20px;
+        }
+
+        .delete-btn {
+            color: #e74c3c;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .delete-btn:hover {
+            color: #c0392b;
+            text-decoration: underline;
+        }
+
+        .empty {
+            font-style: italic;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .pair {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .value {
+                margin: 8px 0;
+            }
+
+            form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📘 Мой словарь</h1>
+
+    <form method="POST">
+        <input type="text" name="key" placeholder="Введите ключ" required>
+        <input type="text" name="value" placeholder="Введите значение" required>
+        <button type="submit">Добавить пару</button>
+    </form>
+
+    {% if pairs %}
+        {% for key, value in pairs.items() %}
+            <div class="pair">
+                <span class="key">{{ key }}</span>
+                <span class="value">→ {{ value }}</span>
+                <a href="/?delete={{ key }}" class="delete-btn">Удалить</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="empty">Словарь пуст. Добавьте первую пару!</p>
+    {% endif %}
+
+</body>
+</html>

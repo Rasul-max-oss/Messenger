@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Зарегистрированные пользователи</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #fce4ec);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            background-color: #f7f9fc;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #444;
+        }
+
+        li::before {
+            content: "👤 ";
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .back-link a {
+            text-decoration: none;
+            color: #42a5f5;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .back-link a:hover {
+            color: #1e88e5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Зарегистрированные пользователи</h1>
+
+    {% if users %}
+        <ul>
+            {% for user in users %}
+                <li>{{ user.Имя }} {{ user.Фамилия }}, {{ user.Возраст }} лет</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Пока никто не зарегистрирован</p>
+    {% endif %}
+    <div class="back-link">
+        <a href="/">⟵ Вернуться к регистрации</a>
+    </div>
+</div>
+
+</body>
+</html>

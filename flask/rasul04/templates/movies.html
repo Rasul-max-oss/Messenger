@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мир фильмов: твои фильмы</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d47a1, #1a237e);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 60px 20px;
+            position: relative;
+        }
+
+        .background-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 160px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.05);
+            transform: translate(-50%, -50%) rotate(-15deg);
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 40px 30px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+            animation: fadeInDown 1s ease;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            animation: fadeInUp 1s ease;
+        }
+
+        li {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            line-height: 1.5;
+            transition: transform 0.3s, background-color 0.3s;
+            position: relative;
+        }
+
+        li:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+
+        li::before {
+            content: "🎬";
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            font-size: 20px;
+        }
+
+        li span {
+            display: block;
+            margin-left: 30px;
+        }
+
+        .delete-form {
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .delete-button {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #ff8a80;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s, color 0.3s;
+        }
+
+        .delete-button:hover {
+            background-color: rgba(244, 67, 54, 0.35);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        p {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            color: #ccc;
+            animation: fadeIn 1s ease;
+        }
+
+        .back-link {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .back-link a {
+            text-decoration: none;
+            color: #90caf9;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .back-link a:hover {
+            color: #ffffff;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-text">Голливуд</div>
+
+<div class="container">
+    <h1>Твой список фильмов</h1>
+
+    {% if films %}
+        <ul>
+            {% for film in films %}
+                <li>
+                    <span><strong>{{ film.Название }}</strong></span>
+                    <span>🎭 Жанр: {{ film.Жанр }}</span>
+                    <span>📅 Дата выхода: {{ film.Дата }}</span>
+                    <span>⭐ Рейтинг: {{ film.Рейтинг }}</span>
+                    <form method="POST" action="/delete" class="delete-form">
+                        <input type="hidden" name="title" value="{{ film.Название }}">
+                        <a href="/?delete={{ film }}" class="delete-button">🗑️ Удалить</a>
+
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Список фильмов пустой</p>
+    {% endif %}
+
+    <div class="back-link">
+        <a href="/">← Вернуться к добавлению фильмов</a>
+    </div>
+</div>
+
+</body>
+</html>

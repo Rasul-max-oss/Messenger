@@ -1,0 +1,17 @@
+name = input("введите имя:")
+print("привет", name)
+
+# a = int(input("Введите число:"))
+# b = int(input("Введите число:"))
+# print("Ответ:", a + b)
+
+# a = int(input("Введите число:"))
+# b = int(input("Введите число:"))
+# c = int(input("Введите число:"))
+# print("Ответ:", a * b * c)
+
+age = int(input("Введите возрост:"))
+if age> 17:
+   print("Вход свободен")
+else:
+   print("Вход запрешен")

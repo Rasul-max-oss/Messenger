@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Computers Shop</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background-color: #f5f5f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #0a84ff;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        nav {
+            background: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            padding: 0.7rem 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav a {
+            text-decoration: none;
+            font-size: 1rem;
+            color: #0a84ff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            transition: 0.2s ease;
+            font-weight: 600;
+        }
+
+        nav a:hover {
+            background-color: #0a84ff;
+            color: white;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+
+        .card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background-color: #ddd;
+        }
+
+        .card-content {
+            padding: 1rem;
+        }
+
+        .card-content h3 {
+            margin: 0 0 10px;
+            color: #333;
+        }
+
+        .specs {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .price {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #0a84ff;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #0066cc;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #0055aa;
+        }
+
+    </style>
+</head>
+<body>
+
+<nav>
+
+    <a href="{{ url_for('cart') }}">🛒 Корзина</a>
+    {% if session.get('admin_logged_in') %}
+        <a href="{{ url_for('admin_add') }}">➕ Добавить товар</a>
+        <a href="{{ url_for('admin_logout') }}">🚪 Выйти</a>
+    {% else %}
+        <a href="{{ url_for('admin_log') }}">🔑 Админ</a>
+    {% endif %}
+</nav>
+
+<header>💻 Магазин компьютеров</header>
+
+<div class="container">
+    {% for computer in computers %}
+    <div class="card">
+        <img src="{{ computer.img or 'https://via.placeholder.com/400x180?text=No+Image' }}" alt="{{ computer.name }}">
+        <div class="card-content">
+            <h3>{{ computer.name }}</h3>
+            <p class="specs">
+                <strong>Процессор:</strong> {{ computer.processor }}<br>
+                <strong>RAM:</strong> {{ computer.ram }} ГБ<br>
+                <strong>Видеокарта:</strong> {{ computer.video_card }}<br>
+                <strong>SSD:</strong> {{ computer.ssd }} ГБ
+            </p>
+            <div class="price">Цена: {{ computer.price }} ₽</div>
+            <a href="/add_to_cart/{{ computer.id }}" class="btn">В корзину</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

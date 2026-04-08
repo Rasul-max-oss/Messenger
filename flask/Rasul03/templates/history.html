@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>История машин</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #eeeeee, #cccccc);
+            color: #222;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #2b2b2b;
+            color: white;
+            text-align: center;
+            padding: 25px 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            letter-spacing: 1px;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 40px auto;
+            background-color: #ffffffdd;
+            padding: 40px 30px;
+            border-radius: 10px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #444;
+            margin-bottom: 30px;
+            font-size: 1.6em;
+        }
+
+        p {
+            font-size: 1.05em;
+            padding: 10px 20px;
+            background: #f7f7f7;
+            border-left: 5px solid #c62828;
+            border-radius: 5px;
+        }
+
+        p br {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+
+        a {
+            display: inline-block;
+            text-decoration: none;
+            background-color: #2b2b2b;
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 40px;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        a:hover {
+            background-color: #444;
+            transform: scale(1.05);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #777;
+            font-size: 0.9em;
+        }
+
+        /* Декоративный фон */
+        body::before {
+            content: "";
+            position: fixed;
+            top: -100px;
+            left: -100px;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at top left, rgba(200,200,200,0.15), transparent 60%),
+                        radial-gradient(circle at bottom right, rgba(180,180,180,0.1), transparent 60%);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>История автомобилей</h1>
+</header>
+
+<main>
+    <h2>В данном разделе вы сможете ознакомиться с историей создания автомобилей:</h2>
+
+    <p>
+        <span class="emoji">🚗</span> Идея самодвижущейся повозки возникла ещё в <span class="highlight">XV веке</span> — у Леонардо да Винчи.<br>
+        В 1672 году Фердинанд Вербист создал миниатюрную паровую тележку для китайского императора.<br>
+        В 1770 году Николя-Жозеф Кюньо построил первый полноразмерный паровой тягач.<br>
+        В XIX веке инженеры начали активно экспериментировать с ДВС.<br>
+        <span class="emoji">💡</span> В 1876 году Николаус Отто изобрёл четырёхтактный бензиновый двигатель.<br>
+        В 1885 году Готтлиб Даймлер создал моторизированную карету.<br>
+        <span class="highlight">1886</span> — Карл Бенц получил патент на первый автомобиль: Benz Patent-Motorwagen.<br>
+        <span class="emoji">📅</span> Машина имела 3 колеса, ременную передачу, водяное охлаждение и ручную подачу топлива.<br>
+        Его жена — <b>Берта Бенц</b> — совершила первую дальнюю поездку, доказав практичность авто.<br>
+        <span class="emoji">🚘</span> В 1893 году появились первые четырёхколёсные автомобили.<br>
+        В 1903 году Генри Форд основал <b>Ford Motor Company</b>.<br>
+        В 1908 появился <b>Ford T</b> — первая массовая и доступная модель.<br>
+        Это стало началом эпохи конвейерного производства.<br>
+        В 1920-х авто стали символом прогресса, в 1930-х — появились дизели.<br>
+        После войны машины стали массовым товаром.<br>
+        В 1970-х — экологические нормы, безопасность.<br>
+        В 1990-х — первые <b>гибридные авто</b>.<br>
+        <span class="emoji">⚡</span> XXI век — электромобили: <b>Tesla, Lucid, Rivian</b> и др.<br>
+        Сегодня — умные, экологичные системы. Завтра? Возможно, летающие машины.
+    </p>
+
+    <div class="center">
+        <a href="/">⬅ Вернуться назад</a>
+    </div>
+</main>
+
+<footer>
+    © 2025 История автомобилей. Все права защищены.
+</footer>
+
+</body>
+</html>

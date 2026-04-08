@@ -1,0 +1,17 @@
+h1 {
+    color: #f0ffff;
+    background: url("../img/3.jpg");
+}
+
+#second_handler {
+    color: #800080;
+    box-shadow: 2px 3px 4px rgba(123,34,245, 0.25);
+}
+
+.third_handler {
+    border: 10px double #6d1c0b;
+}
+
+h1,h2,h3 {
+    text-align: center;
+}

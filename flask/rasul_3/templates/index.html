@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>🥾 Список для хайкинга</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Rock+Salt&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(to top, #dceef2, #a0c4a8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            font-family: 'Rock Salt', cursive;
+            font-size: 2.8em;
+            margin-top: 50px;
+            color: #3e4e2c;
+            animation: floatTitle 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatTitle {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+
+        /* Листья (фон) */
+        .leaf {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Leaf_icon_1.svg/512px-Leaf_icon_1.svg.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.2;
+            animation: leafFall linear infinite;
+        }
+
+        @keyframes leafFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            background: #fffef7;
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            max-width: 550px;
+            width: 90%;
+            margin-top: 30px;
+            animation: fadeInContainer 1s ease-out;
+        }
+
+        @keyframes fadeInContainer {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .item {
+            background: #e2f2dc;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            border-left: 6px solid #4caf50;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #2d593f;
+            opacity: 0;
+            animation: fadeInItem 0.8s ease forwards;
+            position: relative;
+        }
+
+        {% for i in range(items|length) %}
+        .item:nth-child({{ i + 1 }}) {
+            animation-delay: {{ 0.2 * i }}s;
+        }
+        {% endfor %}
+
+        @keyframes fadeInItem {
+            from { opacity: 0; transform: translateX(-40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        a {
+            display: inline-block;
+            font-size: 12px;
+            margin-top: 5px;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #c62828;
+            text-decoration: underline;
+        }
+
+        em {
+            color: #777;
+            display: block;
+            margin-top: 15px;
+            font-style: italic;
+            animation: fadeIn 2s ease;
+        }
+
+        form {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 2px solid #ccc;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4caf50;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #388e3c;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🌲 Мой хайкинг-лист</h1>
+
+    <!-- Падающие листья -->
+    <div class="leaf" style="left: 10%; animation-duration: 12s; animation-delay: 0s;"></div>
+    <div class="leaf" style="left: 30%; animation-duration: 18s; animation-delay: 2s;"></div>
+    <div class="leaf" style="left: 60%; animation-duration: 14s; animation-delay: 4s;"></div>
+    <div class="leaf" style="left: 80%; animation-duration: 20s; animation-delay: 6s;"></div>
+
+    <div class="container">
+        {% if items %}
+            {% for item in items %}
+                <div class="item">🌿 {{ item }}</div>
+                <a href="/?delete={{ item }}">❌ Удалить</a>
+            {% endfor %}
+        {% else %}
+            <p><em>Ничего не взято с собой... добавьте продукты для похода! 🥾</em></p>
+        {% endif %}
+
+        <form method="POST">
+            <input type="text" name="item" placeholder="Добавить продукт или снаряжение" required>
+            <button type="submit">➕ Добавить</button>
+        </form>
+    </div>
+
+</body>
+</html>

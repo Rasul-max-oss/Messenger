@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Server</title>
+</head>
+<body>
+
+<button onclick="getMessage()">Получение данных</button>
+<div id="result"></div>
+
+<button onclick="getdata()">Получение данных</button>
+<br>
+<br>
+<button onclick="randomNumber()">Получение случайного числа</button>
+<h1 id="num"></h1>
+
+
+<button></button>
+
+
+<script>
+    async function getMessage(){
+            const res = await fetch('http://localhost:8000/');
+            const data = await res.json();
+            document.getElementById('result').innerHTML = data.Msg;
+            console.log('Ответ от сервера', data)
+    }
+
+    async function getdata() {
+            const res = await fetch('http://localhost:8000/home');
+            const data = await res.json();
+            let first = data.First
+            let last = data.Last
+            let city = data.City
+            let age = data.Age
+            document.getElementById('result').innerHTML = first + " " + last + " " + city + " " + age
+
+    }
+
+    async function randomNumber() {
+            const res = await fetch('http://localhost:8000/random');
+            const data = await res.json();
+            document.getElementById('num').innerHTML = data.Number
+
+    }
+
+</script>
+
+
+
+
+
+
+</body>
+</html>

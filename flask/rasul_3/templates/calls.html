@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Телефонная книга</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            background-color: #f0f2f5;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            width: 200px;
+        }
+
+        button {
+            padding: 10px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .pair {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #888;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📖 Телефонная книга</h1>
+
+<form method="POST">
+    <input type="text" name="name" placeholder="Введите имя" required>
+    <input type="text" name="number" placeholder="Введите номер телефона" required>
+    <button type="submit">Добавить</button>
+</form>
+
+{% if telephone %}
+    {% for key, value in telephone.items() %}
+        <div class="pair">
+            <span class="key">{{ key }}</span>
+            <span class="value">→ {{ value }}</span>
+            <a href="/?delete={{ key }}">Удалить</a>
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="empty-message">Телефонная книжка пустая</p>
+{% endif %}
+
+</body>
+</html>

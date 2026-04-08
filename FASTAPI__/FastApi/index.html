@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Tasks</title>
+
+<style>
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+.app {
+    width: 400px;
+    background: rgba(0,0,0,.5);
+    padding: 20px;
+    border-radius: 16px;
+}
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 10px;
+}
+button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+.task {
+    background: #1c1c2e;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+    <h2>📝 Tasks</h2>
+
+    <input id="newTask" placeholder="Новая задача">
+    <button onclick="addTask()">Добавить</button>
+
+    <div id="list"></div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+function loadTasks() {
+    fetch(API + "/tasks")
+        .then(r => r.json())
+        .then(d => {
+            const list = document.getElementById("list");
+            list.innerHTML = "";
+            d.tasks.forEach(t => {
+                list.innerHTML += `
+                <div class="task">
+                    <span>${t}</span>
+                    <div>
+                        <button onclick="editTask('${t}')">✏️</button>
+                        <button onclick="deleteTask('${t}')">🗑</button>
+                    </div>
+                </div>`;
+            });
+        });
+}
+
+function addTask() {
+    const v = newTask.value;
+    fetch(API + "/tasks?message=" + encodeURIComponent(v), {method:"POST"})
+        .then(() => {
+            newTask.value = "";
+            loadTasks();
+        });
+}
+
+function deleteTask(t) {
+    fetch(API + "/tasks?message=" + encodeURIComponent(t), {method:"DELETE"})
+        .then(loadTasks);
+}
+
+function editTask(old) {
+    const n = prompt("Новое название:", old);
+    if (!n) return;
+    fetch(`${API}/tasks?old=${encodeURIComponent(old)}&new=${encodeURIComponent(n)}`, {method:"PUT"})
+        .then(loadTasks);
+}
+
+loadTasks();
+</script>
+
+</body>
+</html>

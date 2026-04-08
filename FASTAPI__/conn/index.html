@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+</head>
+<body>
+
+
+<input id="rub" type="number" placeholder="Сумма в рублях">
+<button onclick="convert()">В доллары</button>
+<div id="result"></div>
+
+<script>
+    async function convert() {
+        let rub = document.getElementById('rub').value;
+        let res = await fetch('http://localhost:8000/convert', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({rub: parseFloat(rub)})
+        });
+        let data = await res.json();
+        document.getElementById('result').innerHTML = '$ ' + data.usd;
+    }
+</script>
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+h3 {
+    font-size: 21px;
+    font-weight: bold;
+    text-align: center;
+
+
+}
+
+body {
+    width: 80%;
+    height: 94vh;
+    font-family: "GOST type B", serif;
+    box-shadow: 0 0 8px 8px #a19898;
+    margin: 20px auto;
+    padding: 10px;
+    background-color: #efefef;
+}
+
+#main {
+  width:70%;
+  padding:50px;
+  margin: auto;
+  background-color: #fff;
+  display: flex;
+  flex-wrap:wrap;
+  justify-content: center;
+
+}
+
+.photo {
+    width: calc(50% - 40px);
+    height: calc((35vw - 40px) / 2.8);
+    margin:20px;
+    background-color:orange;
+    background-position:center;
+    background-size:cover;
+}
+
+.photo1 {
+    background-image: url(../img/first/1.jpg);
+}
+
+.photo2 {
+     background-image: url(../img/first/1.jpg);
+}
+
+.photo3 {
+    background-image: url(../img/first/1.jpg);
+}
+
+.photo4 {
+     background-image: url(../img/first/1.jpg);
+}
+
+.photo5 {
+    background-image: url(../img/first/1.jpg);
+}
+
+.photo6 {
+     background-image: url(../img/first/1.jpg);
+}
+
+.clono {
+        width: calc(50% - 40px);
+    height: calc((35vw - 40px) / 2.8);
+    margin:20px;
+    background-color:orange;
+    background-position:center;
+    background-size:cover;
+}

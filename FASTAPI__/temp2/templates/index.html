@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>🌍 Случайный факт о мире</title>
+
+    <style>
+        body{
+            margin:0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg,#1e3c72,#2a5298);
+            color:white;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+        }
+
+        .card{
+            background: rgba(255,255,255,0.1);
+            padding:40px;
+            border-radius:15px;
+            text-align:center;
+            width:600px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1{
+            margin-bottom:20px;
+        }
+
+        .fact{
+            font-size:20px;
+            margin:20px 0;
+        }
+
+        button{
+            padding:10px 20px;
+            font-size:16px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            background:#00c6ff;
+            color:white;
+        }
+
+        button:hover{
+            background:#0096c7;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1>🌍 Случайный факт</h1>
+
+    <div class="fact">
+        {{ fact }}
+    </div>
+
+    <form method="get" action="/">
+        <button>Получить новый факт</button>
+    </form>
+
+</div>
+
+</body>
+</html>

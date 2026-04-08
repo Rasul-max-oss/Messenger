@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Контакты | FastAPI App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Шапка */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* Форма добавления */
+        .add-form {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-title {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff3344;
+            transform: translateY(-2px);
+        }
+
+        .btn-edit {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .btn-edit:hover {
+            background: #ffc700;
+        }
+
+        /* Поиск */
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        /* Список контактов */
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .contact-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .contact-name {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .contact-info {
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .info-icon {
+            width: 20px;
+            color: #667eea;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            background: white;
+            border-radius: 15px;
+            color: #999;
+            font-size: 1.2em;
+            grid-column: 1 / -1;
+        }
+
+        .stats {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Модальное окно для редактирования */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-title {
+            margin-bottom: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <div class="header">
+            <h1>📱 Контакты</h1>
+            <div class="subtitle">Управляйте своими контактами легко и просто</div>
+        </div>
+
+        <!-- Форма добавления -->
+        <div class="add-form">
+            <h2 class="form-title">➕ Добавить новый контакт</h2>
+            <form id="addContactForm">
+                <div class="form-grid">
+                    <input type="text" class="form-input" id="name" placeholder="Имя *" required>
+                    <input type="tel" class="form-input" id="phone" placeholder="Телефон *" required>
+                    <input type="email" class="form-input" id="email" placeholder="Email *" required>
+                    <input type="text" class="form-input" id="address" placeholder="Адрес">
+                </div>
+                <button type="submit" class="btn btn-primary">Добавить контакт</button>
+            </form>
+        </div>
+
+        <!-- Поиск -->
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по имени, телефону или email...">
+                <button class="btn btn-primary" onclick="searchContacts()">Найти</button>
+                <button class="btn btn-edit" onclick="resetSearch()">Сбросить</button>
+            </div>
+        </div>
+
+        <!-- Список контактов -->
+        <div class="contacts-grid" id="contactsGrid">
+            <!-- Контакты будут загружены сюда -->
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats" id="stats">
+            Загрузка...
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2 class="modal-title">✏️ Редактировать контакт</h2>
+            <form id="editContactForm">
+                <input type="hidden" id="editId">
+                <div class="form-grid">
+                    <input type="text" class="form-input" id="editName" placeholder="Имя *" required>
+                    <input type="tel" class="form-input" id="editPhone" placeholder="Телефон *" required>
+                    <input type="email" class="form-input" id="editEmail" placeholder="Email *" required>
+                    <input type="text" class="form-input" id="editAddress" placeholder="Адрес">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+const API = "http://127.0.0.1:8000/api";
+
+document.addEventListener('DOMContentLoaded', loadContacts);
+
+
+// ДОБАВИТЬ КОНТАКТ
+document.getElementById('addContactForm').addEventListener('submit', async (e) => {
+
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("name", document.getElementById("name").value);
+    formData.append("phone", document.getElementById("phone").value);
+    formData.append("email", document.getElementById("email").value);
+    formData.append("address", document.getElementById("address").value);
+
+    try {
+
+        const response = await fetch(`${API}/contacts`, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) throw new Error();
+
+        document.getElementById("addContactForm").reset();
+
+        loadContacts();
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+});
+
+
+
+// ЗАГРУЗИТЬ КОНТАКТЫ
+async function loadContacts(){
+
+    try{
+
+        const response = await fetch(`${API}/contacts`);
+
+        const contacts = await response.json();
+
+        displayContacts(contacts);
+
+        updateStats(contacts.length);
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+
+
+// ОТОБРАЖЕНИЕ
+function displayContacts(contacts){
+
+    const grid = document.getElementById("contactsGrid");
+
+    if(!contacts.length){
+
+        grid.innerHTML = `
+        <div class="empty-state">
+        📭 Контактов пока нет
+        </div>
+        `;
+
+        return;
+
+    }
+
+    grid.innerHTML = contacts.map(contact => `
+
+        <div class="contact-card">
+
+            <div class="contact-name">👤 ${contact.name ?? "Без имени"}</div>
+
+            <div class="contact-info">
+
+                <div class="info-item">
+                📞 ${contact.phone ?? ""}
+                </div>
+
+                <div class="info-item">
+                ✉️ ${contact.email ?? ""}
+                </div>
+
+                <div class="info-item">
+                📍 ${contact.address ?? "Адрес не указан"}
+                </div>
+
+            </div>
+
+            <div class="contact-actions">
+
+                <button class="btn btn-edit btn-small"
+                onclick="editContact('${contact.id}')">✏️</button>
+
+                <button class="btn btn-danger btn-small"
+                onclick="deleteContact('${contact.id}')">🗑️</button>
+
+            </div>
+
+        </div>
+
+    `).join("");
+
+}
+
+
+
+// ПОИСК
+async function searchContacts(){
+
+    const query = document.getElementById("searchInput").value.trim();
+
+    if(!query){
+        loadContacts();
+        return;
+    }
+
+    try{
+
+        const response = await fetch(`${API}/contacts/search?q=${encodeURIComponent(query)}`);
+
+        const contacts = await response.json();
+
+        displayContacts(contacts);
+
+        updateStats(contacts.length,true);
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+
+
+// СБРОС ПОИСКА
+function resetSearch(){
+
+    document.getElementById("searchInput").value="";
+
+    loadContacts();
+
+}
+
+
+
+// УДАЛЕНИЕ
+async function deleteContact(id){
+
+    if(!confirm("Удалить контакт?")) return;
+
+    try{
+
+        const response = await fetch(`${API}/contacts/${id}`,{
+            method:"DELETE"
+        });
+
+        if(!response.ok) throw new Error();
+
+        loadContacts();
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+
+
+// РЕДАКТИРОВАНИЕ
+async function editContact(id){
+
+    try{
+
+        const response = await fetch(`${API}/contacts/${id}`);
+
+        const contact = await response.json();
+
+        document.getElementById("editId").value = contact.id;
+
+        document.getElementById("editName").value = contact.name;
+
+        document.getElementById("editPhone").value = contact.phone;
+
+        document.getElementById("editEmail").value = contact.email;
+
+        document.getElementById("editAddress").value = contact.address || "";
+
+        document.getElementById("editModal").classList.add("active");
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+
+
+// ЗАКРЫТЬ МОДАЛКУ
+function closeModal(){
+
+    document.getElementById("editModal").classList.remove("active");
+
+}
+
+
+
+// СОХРАНИТЬ РЕДАКТИРОВАНИЕ
+document.getElementById("editContactForm").addEventListener("submit", async (e)=>{
+
+    e.preventDefault();
+
+    const id = document.getElementById("editId").value;
+
+    const formData = new FormData();
+
+    formData.append("name", document.getElementById("editName").value);
+    formData.append("phone", document.getElementById("editPhone").value);
+    formData.append("email", document.getElementById("editEmail").value);
+    formData.append("address", document.getElementById("editAddress").value);
+
+    try{
+
+        const response = await fetch(`${API}/contacts/${id}`,{
+
+            method:"PUT",
+
+            body:formData
+
+        });
+
+        if(!response.ok) throw new Error();
+
+        closeModal();
+
+        loadContacts();
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+});
+
+
+
+// СТАТИСТИКА
+function updateStats(count,search=false){
+
+    const stats = document.getElementById("stats");
+
+    if(search){
+
+        stats.innerHTML = `🔍 Найдено контактов: ${count}`;
+
+    }else{
+
+        stats.innerHTML = `📊 Всего контактов: ${count}`;
+
+    }
+
+}
+
+
+
+// ENTER ДЛЯ ПОИСКА
+document.getElementById("searchInput").addEventListener("keydown",(e)=>{
+
+    if(e.key === "Enter"){
+
+        searchContacts();
+
+    }
+
+});
+
+
+
+// КЛИК МИМО МОДАЛКИ
+window.onclick = (e)=>{
+
+    const modal = document.getElementById("editModal");
+
+    if(e.target === modal){
+
+        closeModal();
+
+    }
+
+};
+
+</script>
+</body>
+</html>

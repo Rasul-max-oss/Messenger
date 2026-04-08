@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Выбор цвета</title>
+
+    <style>
+        body {
+            background:#0e0f17;
+            font-family: Segoe UI, sans-serif;
+            color:white;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+        }
+
+        .box {
+            background:#1b1d2b;
+            padding:20px 25px;
+            border-radius:12px;
+            box-shadow:0 0 15px rgba(0,0,0,0.4);
+            text-align:center;
+        }
+
+        button {
+            margin-top:12px;
+            padding:8px 14px;
+            border:none;
+            background:#4da3ff;
+            color:white;
+            border-radius:6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h3>Выберите цвет текста</h3>
+
+    <form method="POST">
+        <input type="color" name="color" value="{{ message.message_color }}" style="width:80px; height:40px;">
+        <br>
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <a href="{{ url_for('forum') }}" style="color:#ff4d4d; display:block; margin-top:10px;">Отмена</a>
+</div>
+
+</body>
+</html>

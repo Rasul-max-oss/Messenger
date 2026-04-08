@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ProfilCHat</title>
+</head>
+<body>
+
+{% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+                <div>{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+<h2>Профиль</h2>
+<p>Привет, <span>{{ username }}</span>!</p>
+<p><a href="{{ url_for('logout') }}">Выйти</a></p>
+
+</body>
+</html>
