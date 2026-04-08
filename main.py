@@ -56,6 +56,14 @@ def get_db():
         db.close()
 
 
+def get_current_user(request: Request, db: Session = Depends(get_db)):
+    """Получить текущего пользователя по cookie"""
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return None
+    return db.query(User).filter(User.id == int(user_id)).first()
+
+
 # --- МАРШРУТЫ ---
 
 @app.get('/')
@@ -296,7 +304,7 @@ def settings(request: Request,name: str = Form(None),password: str = Form(None),
         if name:
             user.username = name
         if password:
-            user.password = int(password)
+            user.password = password  # Исправлено: был int(password), что ломало строки
         if avatar:
             user.avatar = avatar
         if description:
