@@ -492,7 +492,7 @@ def settings(request: Request,name: str = Form(None),password: str = Form(None),
         if name:
             user.username = name
         if password:
-            user.password = password  # Исправлено: был int(password), что ломало строки
+            user.password = password  
         if avatar:
             user.avatar = avatar
         if description:
@@ -507,4 +507,3 @@ def settings(request: Request,name: str = Form(None),password: str = Form(None),
 if __name__ == '__main__':
     uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=True)
 
-print("Сервер запущен на http://)")
