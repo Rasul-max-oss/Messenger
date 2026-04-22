@@ -210,7 +210,6 @@ def chats_page(request: Request, db: Session = Depends(get_db)):
 
 
 # ===== API ЭНДПОИНТЫ =====
-
 @app.get('/api/chats')
 def api_get_chats(request: Request, db: Session = Depends(get_db)):
     user_id = request.cookies.get("user_id")
@@ -231,6 +230,11 @@ def api_get_chats(request: Request, db: Session = Depends(get_db)):
         # Последнее сообщение
         last_msg = db.query(Message).filter(Message.chat_id == chat.id).order_by(Message.id.desc()).first()
         
+        # Расшифровываем текст последнего сообщения, если оно есть
+        last_message_text = None
+        if last_msg:
+            last_message_text = encrypt(last_msg.text, key)  # РАСШИФРОВЫВАЕМ
+        
         result.append({
             "chat_id": chat.id,
             "partner": {
@@ -240,7 +244,7 @@ def api_get_chats(request: Request, db: Session = Depends(get_db)):
                 "description": partner.description
             },
             "last_message": {
-                "text": last_msg.text if last_msg else None,
+                "text": last_message_text,
                 "timestamp": last_msg.timestamp if last_msg else None
             } if last_msg else None
         })
@@ -265,12 +269,10 @@ def api_get_messages(chat_id: int, request: Request, db: Session = Depends(get_d
 
     messages = db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.id).all()
 
-    # Messa = encrypt(messages[0].text, key)
-
     return [
         {
             "id": msg.id,
-            "text": encrypt(msg.text, key),
+            "text": encrypt(msg.text, key),  # РАСШИФРОВЫВАЕМ для отображения
             "timestamp": msg.timestamp,
             "is_mine": msg.sender_id == current_user_id,
             "is_delivered": msg.is_delivered,
@@ -278,7 +280,6 @@ def api_get_messages(chat_id: int, request: Request, db: Session = Depends(get_d
         }
         for msg in messages
     ]
-
 
 @app.post('/api/send_message/{chat_id}')
 async def api_send_message(

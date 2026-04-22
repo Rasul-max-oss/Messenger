@@ -6,198 +6,302 @@
     <title>Мои чаты | Messenger</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #4A90E2;
-            --bg-color: #f0f2f5;
-            --text-main: #333;
-            --text-secondary: #777;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #e9ecef;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
         }
 
-        .container {
-            background: white;
+        .messenger-container {
             width: 100%;
-            max-width: 400px;
-            border-radius: 20px;
+            max-width: 500px;
+            height: 100vh;
+            max-height: 700px;
+            background: white;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
+        /* Header */
+        .chat-header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .header h2 {
-            margin: 0;
-            color: var(--text-main);
-            font-size: 24px;
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #4a90e2;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
         }
 
-        .btn-back {
-            display: inline-block;
-            margin-bottom: 15px;
-            color: var(--primary-color);
-            text-decoration: none;
-            font-size: 14px;
+        .back-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .chat-header h2 {
+            font-size: 20px;
             font-weight: 600;
+            color: #1a1a2e;
+            flex: 1;
         }
 
-        .btn-back i {
-            margin-right: 5px;
+        .add-chat-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
         }
 
-        /* Список чатов */
-        .chat-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        .add-chat-btn:hover {
+            background: #357abd;
+        }
+
+        /* Search */
+        .search-box {
+            padding: 12px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74,144,226,0.1);
+        }
+
+        /* Chats list */
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
         }
 
         .chat-item {
             display: flex;
             align-items: center;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 12px;
-            background: #fafafa;
-            border: 1px solid #e8e8e8;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            color: inherit;
+            padding: 12px 20px;
             cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            gap: 12px;
         }
 
         .chat-item:hover {
-            border-color: var(--primary-color);
-            background-color: #f5f9ff;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
-            transform: translateY(-2px);
+            background: #f8f9fa;
         }
 
-        .chat-avatar {
-            width: 50px;
-            height: 50px;
+        .avatar {
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             object-fit: cover;
-            margin-right: 15px;
-            border: 2px solid #ddd;
             flex-shrink: 0;
         }
 
         .chat-info {
-            flex-grow: 1;
+            flex: 1;
             min-width: 0;
         }
 
-        .chat-info .chat-name {
-            display: block;
+        .chat-name {
             font-weight: 600;
-            font-size: 1rem;
-            color: #222;
+            color: #1a1a2e;
             margin-bottom: 4px;
+            font-size: 16px;
+        }
+
+        .last-message {
+            font-size: 13px;
+            color: #6c757d;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .chat-info .status {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .chat-btn {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 18px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: background 0.2s;
-            white-space: nowrap;
+        .message-time {
+            font-size: 11px;
+            color: #adb5bd;
             flex-shrink: 0;
         }
 
-        .chat-btn:hover {
-            background-color: #357abd;
-        }
-
-        .no-chats {
+        .empty-state {
             text-align: center;
-            padding: 50px 20px;
-            color: #999;
+            padding: 60px 20px;
+            color: #adb5bd;
         }
 
-        .no-chats i {
-            font-size: 4rem;
-            margin-bottom: 15px;
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .create-chat-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .create-chat-btn:hover {
+            background: #357abd;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #adb5bd;
+        }
+
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 12px;
             display: block;
-            color: #ccc;
-        }
-
-        .no-chats p {
-            margin: 0 0 15px 0;
-            font-size: 1.1rem;
-        }
-
-        /* Адаптивность для мобилок */
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-                border-radius: 0;
-                min-height: 100vh;
-            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <a href="/profile" class="btn-back">
-            <i class="fa-solid fa-arrow-left"></i> Назад в профиль
+<div class="messenger-container">
+    <div class="chat-header">
+        <a href="/profile" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
         </a>
-        <h2><i class="fa-solid fa-message"></i> Мои чаты</h2>
+        <h2>Чаты</h2>
+        <a href="/add_number_page" class="add-chat-btn">
+            <i class="fas fa-plus"></i>
+        </a>
     </div>
 
-    {% if chats %}
-        <ul class="chat-list">
-            {% for chat, partner in chats %}
-                <li class="chat-item">
-                    <img src="{{ partner.avatar if partner.avatar else 'https://via.placeholder.com/50?text=' + partner.username[0] }}" alt="{{ partner.username }}" class="chat-avatar">
-                    <div class="chat-info">
-                        <div class="chat-name">{{ partner.username }}</div>
-                        {% if partner.description %}
-                            <div class="status">{{ partner.description[:30] }}{% if partner.description|length > 30 %}...{% endif %}</div>
-                        {% endif %}
-                    </div>
-                    <a href="/chat/{{ chat.id }}" class="chat-btn">
-                        <i class="fa-solid fa-comment"></i> Открыть
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <div class="no-chats">
-            <i class="fa-regular fa-comments"></i>
-            <p>У вас пока нет чатов</p>
-            <a href="/add_number_page" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
-                <i class="fa-solid fa-user-plus"></i> Создать первый чат
-            </a>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Поиск по чатам...">
+    </div>
+
+    <div class="chats-list" id="chatsList">
+        <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Загрузка чатов...
         </div>
-    {% endif %}
+    </div>
 </div>
 
+<script>
+    let allChats = [];
+
+    async function loadChats() {
+        try {
+            const response = await fetch('/api/chats');
+            const data = await response.json();
+            
+            if (data.error) {
+                showEmptyState('Ошибка загрузки');
+                return;
+            }
+            
+            allChats = data;
+            renderChats(allChats);
+        } catch (error) {
+            console.error('Error:', error);
+            showEmptyState('Не удалось загрузить чаты');
+        }
+    }
+
+    function renderChats(chats) {
+        const container = document.getElementById('chatsList');
+        
+        if (!chats || chats.length === 0) {
+            showEmptyState('У вас пока нет чатов');
+            return;
+        }
+        
+        container.innerHTML = chats.map(chat => `
+            <a href="/chat/${chat.chat_id}" class="chat-item">
+                <img src="${chat.partner.avatar || 'https://via.placeholder.com/56?text=' + chat.partner.username.charAt(0).toUpperCase()}" 
+                     class="avatar" 
+                     alt="${escapeHtml(chat.partner.username)}"
+                     onerror="this.src='https://via.placeholder.com/56?text=${chat.partner.username.charAt(0).toUpperCase()}'">
+                <div class="chat-info">
+                    <div class="chat-name">${escapeHtml(chat.partner.username)}</div>
+                    <div class="last-message">${escapeHtml(chat.last_message?.text || 'Нет сообщений')}</div>
+                </div>
+                ${chat.last_message?.timestamp ? `<div class="message-time">${escapeHtml(chat.last_message.timestamp)}</div>` : ''}
+            </a>
+        `).join('');
+    }
+
+    function showEmptyState(message) {
+        const container = document.getElementById('chatsList');
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <p>${message}</p>
+                <a href="/add_number_page" class="create-chat-btn">
+                    <i class="fas fa-plus"></i> Создать чат
+                </a>
+            </div>
+        `;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Поиск
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = allChats.filter(chat => 
+            chat.partner.username.toLowerCase().includes(query)
+        );
+        renderChats(filtered);
+    });
+
+    // Загружаем чаты при открытии страницы
+    document.addEventListener('DOMContentLoaded', loadChats);
+</script>
 </body>
 </html>
-
