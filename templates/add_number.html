@@ -100,6 +100,23 @@
         .back-link:hover {
             color: #4A90E2;
         }
+
+        .group-link {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background-color: #667eea;
+            color: white;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s;
+            box-sizing: border-box;
+        }
+
+        .group-link:hover {
+            background-color: #5568d3;
+        }
     </style>
 </head>
 <body>
@@ -125,6 +142,13 @@
 
         <button type="submit">Создать диалог</button>
     </form>
+
+    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="font-size: 14px; color: #777; margin-bottom: 15px;">или</p>
+        <a href="/group_chat_page" class="group-link">
+            <i class="fa-solid fa-users"></i> Создать группу
+        </a>
+    </div>
 
     <a href="/profile" class="back-link"><i class="fa-solid fa-arrow-left"></i> Назад в профиль</a>
 </div>

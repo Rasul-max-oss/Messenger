@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Групповые чаты | Messenger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #e8e8e8;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .messenger-container {
+            width: 95%;
+            max-width: 1400px;
+            height: 95vh;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ===== ЛЕВАЯ ПАНЕЛЬ (СПИСОК ГРУПП) ===== */
+        .sidebar {
+            width: 350px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-actions a, .header-actions button {
+            color: white;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .header-actions a:hover, .header-actions button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .search-box {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            outline: none;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+        }
+
+        .group-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+        }
+
+        .group-list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .group-list-item:hover {
+            background: #f5f5f5;
+        }
+
+        .group-list-item.active {
+            background: #e8f0fe;
+            border-left: 3px solid #667eea;
+        }
+
+        .group-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .group-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .group-name {
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .group-members-count {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #adb5bd;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* ===== ЦЕНТРАЛЬНАЯ ПАНЕЛЬ (СООБЩЕНИЯ) ===== */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+        }
+
+        .chat-header-bar {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header-info h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .chat-header-info p {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-controls button:hover {
+            background: #5568d3;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .message.own {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sender-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .message-bubble {
+            max-width: 60%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+        }
+
+        .message.own .message-bubble {
+            background: #667eea;
+            color: white;
+        }
+
+        .sender-name {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 2px;
+        }
+
+        .message-text {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #bbb;
+            margin-top: 2px;
+        }
+
+        .message-input-area {
+            background: white;
+            padding: 16px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: #f5f5f5;
+            border-radius: 24px;
+            padding: 0 16px;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            padding: 12px 0;
+            font-size: 14px;
+        }
+
+        .send-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            background: #5568d3;
+        }
+
+        /* ===== ПРАВАЯ ПАНЕЛЬ (ЧЛЕНЫ ГРУППЫ) ===== */
+        .members-panel {
+            width: 280px;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .members-header {
+            background: #f5f5f5;
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .members-header h4 {
+            font-size: 0.95rem;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .add-user-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .add-user-btn:hover {
+            background: #5568d3;
+        }
+
+        .members-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding: 8px 0;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .member-item:hover {
+            background: #f5f5f5;
+        }
+
+        .member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 500;
+            color: #1a1a2e;
+            font-size: 13px;
+        }
+
+        .member-role {
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* ===== МОДАЛЬНЫЕ ОКНА ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a1a2e;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .no-group-selected {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            text-align: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .no-group-selected i {
+            font-size: 48px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .members-panel {
+                display: none;
+            }
+
+            .sidebar {
+                width: 280px;
+            }
+
+            .message-bubble {
+                max-width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="messenger-container">
+        <!-- ЛЕВАЯ ПАНЕЛЬ: СПИСОК ГРУПП -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Группы</h2>
+                <div class="header-actions">
+                    <button id="backBtn" title="Назад">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button id="createGroupBtn" title="Создать группу">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchGroups" placeholder="Поиск групп...">
+            </div>
+            <ul class="group-list" id="groupList"></ul>
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-users"></i>
+                <p>Нет групп</p>
+            </div>
+        </div>
+
+        <!-- ЦЕНТРАЛЬНАЯ ПАНЕЛЬ: ЧАТ -->
+        <div class="chat-area">
+            <div class="no-group-selected" id="noGroupSelected">
+                <i class="fas fa-comment-dots"></i>
+                <p>Выберите группу для просмотра</p>
+            </div>
+
+            <!-- ЗАГОЛОВОК ЧАТА -->
+            <div id="chatWindow" style="display: none; flex: 1; display: flex; flex-direction: column;" class="chat-window-hidden">
+                <div class="chat-header-bar">
+                    <div class="chat-header-info">
+                        <h3 id="groupName"></h3>
+                        <p id="membersCount"></p>
+                    </div>
+                    <div class="header-controls">
+                        <button id="settingsBtn">
+                            <i class="fas fa-cog"></i>
+                            Параметры
+                        </button>
+                    </div>
+                </div>
+
+                <!-- СООБЩЕНИЯ -->
+                <div class="messages-container" id="messagesContainer"></div>
+
+                <!-- ВВОД СООБЩЕНИЯ -->
+                <div class="message-input-area">
+                    <div class="input-wrapper">
+                        <input type="text" id="messageInput" placeholder="Введите сообщение...">
+                    </div>
+                    <button class="send-btn" id="sendBtn" title="Отправить">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПРАВАЯ ПАНЕЛЬ: ЧЛЕНЫ ГРУППЫ -->
+        <div class="members-panel" id="membersPanel" style="display: none;">
+            <div class="members-header">
+                <h4>Члены группы</h4>
+                <button class="add-user-btn" id="addUserBtn">
+                    <i class="fas fa-user-plus"></i> Добавить пользователя
+                </button>
+            </div>
+            <ul class="members-list" id="membersList"></ul>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ ГРУППЫ -->
+    <div class="modal" id="createGroupModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('createGroupModal')">&times;</button>
+            <div class="modal-header">Создать группу</div>
+            <form id="createGroupForm">
+                <div class="form-group">
+                    <label for="groupName">Название группы:</label>
+                    <input type="text" id="groupName" placeholder="Введите название" required>
+                </div>
+                <div class="form-group">
+                    <label for="groupDesc">Описание:</label>
+                    <textarea id="groupDesc" placeholder="Введите описание группы" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="groupAvatar">URL аватара:</label>
+                    <input type="text" id="groupAvatar" placeholder="Ссылка на изображение" value="https://via.placeholder.com/50">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createGroupModal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: ДОБАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯ -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
+            <div class="modal-header">Добавить пользователя</div>
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label for="userNumber">Номер телефона:</label>
+                    <input type="number" id="userNumber" placeholder="Введите номер телефона" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentGroupId = null;
+        let currentUserId = null;
+        let ws = null;
+
+        // Получение текущего пользователя из cookie
+        function getCurrentUserId() {
+            const name = "user_id=";
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const cookieArray = decodedCookie.split(';');
+            for (let cookie of cookieArray) {
+                cookie = cookie.trim();
+                if (cookie.indexOf(name) === 0) {
+                    return parseInt(cookie.substring(name.length));
+                }
+            }
+            return null;
+        }
+
+        currentUserId = getCurrentUserId();
+
+        // Загрузка групп
+        async function loadGroupChats() {
+            try {
+                const response = await fetch('/api/group_chats');
+                const groups = await response.json();
+                displayGroups(groups);
+            } catch (error) {
+                console.error('Ошибка загрузки групп:', error);
+            }
+        }
+
+        // Отображение групп в списке
+        function displayGroups(groups) {
+            const groupList = document.getElementById('groupList');
+            const emptyState = document.getElementById('emptyState');
+
+            groupList.innerHTML = '';
+
+            if (groups.length === 0) {
+                emptyState.style.display = 'flex';
+                document.getElementById('noGroupSelected').style.display = 'flex';
+                document.getElementById('chatWindow').style.display = 'none';
+                document.getElementById('membersPanel').style.display = 'none';
+                // Автоматически открываем модал создания группы
+                openModal('createGroupModal');
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            groups.forEach(group => {
+                const li = document.createElement('li');
+                li.className = `group-list-item${currentGroupId === group.group_chat_id ? ' active' : ''}`;
+                li.onclick = () => selectGroup(group);
+                li.innerHTML = `
+                    <img src="${group.avatar}" alt="Group" class="group-avatar">
+                    <div class="group-info">
+                        <div class="group-name">${group.name}</div>
+                        <div class="group-members-count">${group.members_count} участников</div>
+                    </div>
+                `;
+                groupList.appendChild(li);
+            });
+        }
+
+        // Выбор группы
+        async function selectGroup(group) {
+            currentGroupId = group.group_chat_id;
+            document.getElementById('noGroupSelected').style.display = 'none';
+            document.getElementById('chatWindow').style.display = 'flex';
+            document.getElementById('membersPanel').style.display = 'flex';
+
+            document.getElementById('groupName').textContent = group.name;
+            document.getElementById('membersCount').textContent = `${group.members_count} участников`;
+
+            // Загружаем сообщения и членов группы
+            await loadGroupMessages();
+            await loadGroupMembers();
+
+            // Обновляем активный элемент в списке
+            document.querySelectorAll('.group-list-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // Загрузка сообщений группы
+        async function loadGroupMessages() {
+            try {
+                const response = await fetch(`/api/group_messages/${currentGroupId}`);
+                const messages = await response.json();
+                displayMessages(messages);
+            } catch (error) {
+                console.error('Ошибка загрузки сообщений:', error);
+            }
+        }
+
+        // Отображение сообщений
+        function displayMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message${msg.is_mine ? ' own' : ''}`;
+                div.innerHTML = `
+                    ${!msg.is_mine ? `<img src="${msg.sender_avatar}" alt="avatar" class="sender-avatar">` : ''}
+                    <div class="message-content">
+                        ${!msg.is_mine ? `<div class="sender-name">${msg.sender_username}</div>` : ''}
+                        <div class="message-bubble">
+                            <div class="message-text">${msg.text}</div>
+                            <div class="message-time">${msg.timestamp}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Скролл вниз
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Загрузка членов группы
+        async function loadGroupMembers() {
+            try {
+                const response = await fetch(`/api/group_members/${currentGroupId}`);
+                const data = await response.json();
+                displayMembers(data.members);
+            } catch (error) {
+                console.error('Ошибка загрузки членов:', error);
+            }
+        }
+
+        // Отображение членов группы
+        function displayMembers(members) {
+            const membersList = document.getElementById('membersList');
+            membersList.innerHTML = '';
+
+            members.forEach(member => {
+                const li = document.createElement('li');
+                li.className = 'member-item';
+                li.innerHTML = `
+                    <img src="${member.avatar}" alt="avatar" class="member-avatar">
+                    <div class="member-info">
+                        <div class="member-name">${member.username}</div>
+                        <div class="member-role">${member.is_creator ? 'Создатель' : 'Участник'}</div>
+                    </div>
+                `;
+                membersList.appendChild(li);
+            });
+        }
+
+        // Отправка сообщения
+        document.getElementById('sendBtn').addEventListener('click', async () => {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+
+            if (!text || !currentGroupId) return;
+
+            const formData = new FormData();
+            formData.append('text', text);
+
+            try {
+                const response = await fetch(`/api/send_group_message/${currentGroupId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    input.value = '';
+                    await loadGroupMessages();
+                }
+            } catch (error) {
+                console.error('Ошибка отправки сообщения:', error);
+            }
+        });
+
+        // Отправка при нажатии Enter
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('sendBtn').click();
+            }
+        });
+
+        // Создание группы
+        document.getElementById('createGroupBtn').addEventListener('click', () => {
+            openModal('createGroupModal');
+        });
+
+        document.getElementById('createGroupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('groupName').value);
+            formData.append('description', document.getElementById('groupDesc').value);
+            formData.append('avatar', document.getElementById('groupAvatar').value);
+
+            try {
+                const response = await fetch('/api/create_group_chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    closeModal('createGroupModal');
+                    document.getElementById('createGroupForm').reset();
+                    await loadGroupChats();
+                }
+            } catch (error) {
+                console.error('Ошибка создания группы:', error);
+            }
+        });
+
+        // Добавление пользователя в группу
+        document.getElementById('addUserBtn').addEventListener('click', () => {
+            openModal('addUserModal');
+        });
+
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('number', document.getElementById('userNumber').value);
+
+            try {
+                const response = await fetch(`/api/add_user_to_group/${currentGroupId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeModal('addUserModal');
+                    document.getElementById('addUserForm').reset();
+                    await loadGroupMembers();
+                    alert('Пользователь добавлен!');
+                } else {
+                    alert(data.error || 'Ошибка добавления пользователя');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка добавления пользователя');
+            }
+        });
+
+        // Кнопка назад
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = '/profile';
+        });
+
+        // Вспомогательные функции для модальных окон
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Загрузка групп при загрузке страницы
+        window.addEventListener('load', () => {
+            loadGroupChats();
+        });
+
+        // Обновление списка групп каждые 3 секунды
+        setInterval(loadGroupChats, 3000);
+    </script>
+</body>
+</html>

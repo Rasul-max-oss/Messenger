@@ -1,7 +1,7 @@
 import uvicorn
 import datetime
 import json
-from fastapi import FastAPI, Depends, Form, Request, Response, WebSocket
+from fastapi import FastAPI, Depends, Form, HTTPException, Request, Response, WebSocket
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, or_, and_, Boolean
@@ -18,6 +18,14 @@ def encrypt(text, key):
     return ''.join(chr(ord(c) ^ ord(key[i % len(key)])) for i, c in enumerate(text))
 
 key = "Messenger_Max"
+
+class GroupChat(Base):
+    __tablename__ = "group_chats"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    description = Column(String)
+    avatar = Column(String)
+    creator_id = Column(Integer, ForeignKey("users.id"))
 
 
 class User(Base):
@@ -47,6 +55,33 @@ class Message(Base):
     timestamp = Column(String)
     is_delivered = Column(Boolean, default=True)  # Доставлено (отправлено на сервер)
     is_read = Column(Boolean, default=False)  # Прочитано собеседником
+    is_deleted_globally = Column(Boolean, default=False)  # Удалено у всех
+    is_deleted_for_sender = Column(Boolean, default=False)  # Удалено у отправителя
+    is_deleted_for_receiver = Column(Boolean, default=False)  # Удалено у получателя
+
+class Block(Base):
+    __tablename__ = "blocks"
+    id = Column(Integer, primary_key=True, index=True)
+    blocker_id = Column(Integer, ForeignKey("users.id"))
+    blocked_id = Column(Integer, ForeignKey("users.id"))
+
+
+class GroupMember(Base):
+    __tablename__ = "group_members"
+    id = Column(Integer, primary_key=True, index=True)
+    group_chat_id = Column(Integer, ForeignKey("group_chats.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    joined_at = Column(String)
+
+
+class GroupMessage(Base):
+    __tablename__ = "group_messages"
+    id = Column(Integer, primary_key=True, index=True)
+    group_chat_id = Column(Integer, ForeignKey("group_chats.id"))
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    text = Column(String)
+    timestamp = Column(String)
+    is_deleted = Column(Boolean, default=False)
 
 
 Base.metadata.create_all(bind=engine)
@@ -206,6 +241,7 @@ def chats_page(request: Request, db: Session = Depends(get_db)):
     if not user_id:
         return RedirectResponse("/login_page", status_code=303)
 
+
     return templates.TemplateResponse("messenger.html", context={"request": request})
 
 
@@ -227,8 +263,23 @@ def api_get_chats(request: Request, db: Session = Depends(get_db)):
         partner_id = chat.user2_id if chat.user1_id == current_user_id else chat.user1_id
         partner = db.query(User).filter(User.id == partner_id).first()
         
-        # Последнее сообщение
-        last_msg = db.query(Message).filter(Message.chat_id == chat.id).order_by(Message.id.desc()).first()
+        # Проверяем, не заблокировал ли партнёр меня
+        blocked_by_partner = db.query(Block).filter(
+            Block.blocker_id == partner_id,
+            Block.blocked_id == current_user_id
+        ).first()
+        
+        # Проверяем, не заблокировал ли я партнёра
+        blocked_by_me = db.query(Block).filter(
+            Block.blocker_id == current_user_id,
+            Block.blocked_id == partner_id
+        ).first()
+        
+        # Последнее сообщение (не удаленное)
+        last_msg = db.query(Message).filter(
+            Message.chat_id == chat.id,
+            Message.is_deleted_globally == False
+        ).order_by(Message.id.desc()).first()
         
         # Расшифровываем текст последнего сообщения, если оно есть
         last_message_text = None
@@ -240,8 +291,12 @@ def api_get_chats(request: Request, db: Session = Depends(get_db)):
             "partner": {
                 "id": partner.id,
                 "username": partner.username,
+                "number": partner.number,
+                "adders": encrypt(partner.adders, key),  # Расшифровываем адрес
                 "avatar": partner.avatar,
-                "description": partner.description
+                "description": partner.description,
+                "is_blocked_by_me": blocked_by_me is not None,
+                "is_blocked_by_partner": blocked_by_partner is not None
             },
             "last_message": {
                 "text": last_message_text,
@@ -269,17 +324,28 @@ def api_get_messages(chat_id: int, request: Request, db: Session = Depends(get_d
 
     messages = db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.id).all()
 
-    return [
-        {
+    result = []
+    for msg in messages:
+        # Пропускаем полностью удаленные сообщения
+        if msg.is_deleted_globally:
+            continue
+        
+        # Пропускаем сообщения, удаленные для текущего пользователя
+        if msg.sender_id == current_user_id and msg.is_deleted_for_sender:
+            continue
+        if msg.sender_id != current_user_id and msg.is_deleted_for_receiver:
+            continue
+        
+        result.append({
             "id": msg.id,
             "text": encrypt(msg.text, key),  # РАСШИФРОВЫВАЕМ для отображения
             "timestamp": msg.timestamp,
             "is_mine": msg.sender_id == current_user_id,
             "is_delivered": msg.is_delivered,
             "is_read": msg.is_read
-        }
-        for msg in messages
-    ]
+        })
+    
+    return result
 
 @app.post('/api/send_message/{chat_id}')
 async def api_send_message(
@@ -300,6 +366,24 @@ async def api_send_message(
         return {"error": "Чат не найден"}
 
     partner_id = chat.user2_id if chat.user1_id == current_user_id else chat.user1_id
+
+    # Проверяем, не заблокирован ли текущий пользователь собеседником
+    block_check = db.query(Block).filter(
+        Block.blocker_id == partner_id,
+        Block.blocked_id == current_user_id
+    ).first()
+    
+    if block_check:
+        return {"error": "Вы заблокированы этим пользователем"}
+
+    # Проверяем, не заблокировал ли текущий пользователь собеседника
+    block_check_reverse = db.query(Block).filter(
+        Block.blocker_id == current_user_id,
+        Block.blocked_id == partner_id
+    ).first()
+    
+    if block_check_reverse:
+        return {"error": "Вы заблокировали этого пользователя. Разблокируйте его, чтобы отправлять сообщения."}
 
     new_message = Message(
         chat_id=chat_id,
@@ -357,12 +441,18 @@ def api_add_number(request: Request, number: int = Form(...), db: Session = Depe
         )
     ).first()
 
+    blocked_user = db.query(Block).filter(Block.blocked_id == target_user.id, Block.blocker_id == current_user_id).first()
+    if blocked_user:
+         raise HTTPException(status_code=510, detail="Вы заблокировали этого пользователя. Разблокируйте его, чтобы начать чат.")
+
     if existing_chat:
         return {
             "chat_id": existing_chat.id,
             "partner": {
                 "id": target_user.id,
                 "username": target_user.username,
+                "number": target_user.number,
+                "adders": encrypt(target_user.adders, key),
                 "avatar": target_user.avatar,
                 "description": target_user.description
             }
@@ -378,6 +468,8 @@ def api_add_number(request: Request, number: int = Form(...), db: Session = Depe
         "partner": {
             "id": target_user.id,
             "username": target_user.username,
+            "number": target_user.number,
+            "adders": encrypt(target_user.adders, key),
             "avatar": target_user.avatar,
             "description": target_user.description
         }
@@ -514,7 +606,642 @@ def settings(request: Request,name: str = Form(None),password: str = Form(None),
     return RedirectResponse('/profile',status_code=303)
 
 
+@app.delete('/api/delete_message/{message_id}')
+async def api_delete_message(message_id: int, request: Request, db: Session = Depends(get_db)):
+    """Удалить сообщение у всех (полное удаление)"""
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
 
-if __name__ == '__main__':
-    uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=True)
+    current_user_id = int(user_id)
 
+    message = db.query(Message).filter(Message.id == int(message_id)).first()
+    if not message:
+        return {"error": "Сообщение не найдено"}
+
+    # Только отправитель может удалить сообщение у всех
+    if message.sender_id != current_user_id:
+        return {"error": "Нет доступа"}
+
+    message.is_deleted_globally = True
+    db.commit()
+
+    # Уведомляем собеседника о удалении
+    receiver_id = None
+    chat = db.query(Chat).filter(Chat.id == message.chat_id).first()
+    if chat:
+        receiver_id = chat.user2_id if chat.user1_id == current_user_id else chat.user1_id
+        await manager.send_notification(receiver_id, {
+            "type": "message_deleted",
+            "message_id": message_id,
+            "chat_id": message.chat_id
+        })
+
+    return {"status": "ok", "message": "Сообщение удалено у всех", "partner_id": receiver_id}
+
+
+@app.delete('/api/delete_message_self/{message_id}')
+async def api_delete_message_self(message_id: int, request: Request, db: Session = Depends(get_db)):
+    """Удалить сообщение только у себя"""
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+
+    message = db.query(Message).filter(Message.id == int(message_id)).first()
+    if not message:
+        return {"error": "Сообщение не найдено"}
+
+    # Проверяем доступ
+    chat = db.query(Chat).filter(Chat.id == message.chat_id).first()
+    if not chat or (chat.user1_id != current_user_id and chat.user2_id != current_user_id):
+        return {"error": "Нет доступа"}
+
+    # Помечаем удаление в зависимости от того, отправитель это или получатель
+    if message.sender_id == current_user_id:
+        message.is_deleted_for_sender = True
+    else:
+        message.is_deleted_for_receiver = True
+
+    db.commit()
+
+    return {"status": "ok", "message": "Сообщение удалено у вас"}
+
+
+@app.delete('/api/delete_chat/{chat_id}')
+def api_delete_chat(chat_id: int, request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+
+    chat = db.query(Chat).filter(Chat.id == chat_id).first()
+    if not chat:
+        return {"error": "Чат не найден"}
+
+    if chat.user1_id != current_user_id and chat.user2_id != current_user_id:
+        return {"error": "Нет доступа"}
+
+    # Удаляем все сообщения в чате
+    db.query(Message).filter(Message.chat_id == chat_id).delete()
+    # Удаляем сам чат
+    db.delete(chat)
+    db.commit()
+
+    return {"status": "ok", "message": "Чат удалён"}   
+
+
+@app.put('/api/edit_message/{message_id}')
+async def api_edit_message(message_id: int, request: Request, new_text: str = Form(...), db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+
+    message = db.query(Message).filter(Message.id == int(message_id)).first()
+    if not message:
+        return {"error": "Сообщение не найдено"}
+
+    # Только отправитель может редактировать сообщение
+    if message.sender_id != current_user_id:
+        return {"error": "Нет доступа"}
+
+    message.text = encrypt(new_text, key)  # Сохраняем отредактированный текст в зашифрованном виде
+    db.commit()
+
+    # Уведомляем собеседника о редактировании
+    receiver_id = None
+    chat = db.query(Chat).filter(Chat.id == message.chat_id).first()
+    if chat:
+        receiver_id = chat.user2_id if chat.user1_id == current_user_id else chat.user1_id
+        await manager.send_notification(receiver_id, {
+            "type": "message_edited",
+            "message_id": message_id,
+            "chat_id": message.chat_id,
+            "new_text": new_text,
+            "timestamp": message.timestamp
+        })
+
+    return {"status": "ok", "message": "Сообщение отредактировано", "new_text": new_text, "new_timestamp": message.timestamp}
+
+@app.get('/show_information/{user_id}')
+def show_information(request: Request, user_id: int, db: Session = Depends(get_db)):
+    current_user_id = request.cookies.get("user_id")
+    if not current_user_id:
+        return RedirectResponse("/login_page", status_code=303)
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {"error": "Пользователь не найден"}
+
+
+
+    return templates.TemplateResponse("show_information.html", context={"request": request, "user": user})
+
+@app.post('/block_user/{user_id}')
+def block_user(request: Request, user_id: int, db: Session = Depends(get_db)):
+    current_user = request.cookies.get("user_id")
+    if not current_user:
+        return {"error": "Не авторизован"}
+    
+    current_user_id = int(current_user)
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        return {"error": "Пользователь не найден"}  
+    
+    if user_id == current_user_id:   
+        return {"error": "Нельзя заблокировать самого себя"}
+    
+    # Проверяем, не заблокирован ли уже этот пользователь
+    existing_block = db.query(Block).filter(
+        Block.blocker_id == current_user_id,
+        Block.blocked_id == user_id
+    ).first()
+    
+    if existing_block:
+        return {"error": "Пользователь уже заблокирован"}
+    
+    # Создаём блокировку
+    new_block = Block(blocker_id=current_user_id, blocked_id=user_id)
+    db.add(new_block)
+    db.commit()
+
+    # Удаляем чат с заблокированным пользователем
+    current_chat = db.query(Chat).filter(
+        or_(
+            and_(Chat.user1_id == current_user_id, Chat.user2_id == user_id),
+            and_(Chat.user1_id == user_id, Chat.user2_id == current_user_id)
+        )
+    ).first()
+    
+    if current_chat:
+        db.query(Message).filter(Message.chat_id == current_chat.id).delete()
+        db.commit()
+
+    return {"status": "ok", "message": "Пользователь заблокирован"}
+
+
+@app.post('/api/block_user/{user_id}')
+async def api_block_user(user_id: int, request: Request, db: Session = Depends(get_db)):
+    """API для блокировки пользователя из чата"""
+    current_user = request.cookies.get("user_id")
+    if not current_user:
+        return JSONResponse({"error": "Не авторизован"}, status_code=401)
+    
+    current_user_id = int(current_user)
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        return JSONResponse({"error": "Пользователь не найден"}, status_code=404)
+    
+    if user_id == current_user_id:   
+        return JSONResponse({"error": "Нельзя заблокировать самого себя"}, status_code=400)
+    
+    # Проверяем, не заблокирован ли уже этот пользователь
+    existing_block = db.query(Block).filter(
+        Block.blocker_id == current_user_id,
+        Block.blocked_id == user_id
+    ).first()
+    
+    if existing_block:
+        return JSONResponse({"error": "Пользователь уже заблокирован"}, status_code=400)
+    
+    # Создаём блокировку
+    new_block = Block(blocker_id=current_user_id, blocked_id=user_id)
+    db.add(new_block)
+    db.commit()
+
+    # НЕ удаляем чат - оставляем его для возможности разблокировки
+    # Chat остаётся нетронутым
+
+    return {"status": "ok", "message": "Пользователь заблокирован"}
+
+
+@app.delete('/api/unblock_user/{user_id}')
+def api_unblock_user(user_id: int, request: Request, db: Session = Depends(get_db)):
+    """API для разблокировки пользователя"""
+    current_user = request.cookies.get("user_id")
+    if not current_user:
+        return JSONResponse({"error": "Не авторизован"}, status_code=401)
+    
+    current_user_id = int(current_user)
+    
+    # Ищем блокировку
+    block_record = db.query(Block).filter(
+        Block.blocker_id == current_user_id,
+        Block.blocked_id == user_id
+    ).first()
+    
+    if not block_record:
+        return JSONResponse({"error": "Пользователь не заблокирован"}, status_code=404)
+    
+    # Удаляем блокировку
+    db.delete(block_record)
+    db.commit()
+
+    return {"status": "ok", "message": "Пользователь разблокирован"}
+
+@app.get('/group_chat_page')
+def group_chat_page(request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return RedirectResponse("/login_page", status_code=303)
+
+    return templates.TemplateResponse("group_chat.html", context={"request": request})
+
+
+@app.post('/api/create_group_chat')
+def api_create_group_chat(request: Request, name: str = Form(...), description: str = Form(...), avatar: str = Form(...), db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+
+    new_group_chat = GroupChat(
+        name=name,
+        description=description,
+        avatar=avatar,
+        creator_id=current_user_id
+    )
+    db.add(new_group_chat)
+    db.commit()
+    db.refresh(new_group_chat)
+    
+    # Добавляем создателя в группу
+    creator_member = GroupMember(
+        group_chat_id=new_group_chat.id,
+        user_id=current_user_id,
+        joined_at=str(datetime.datetime.now().strftime("%H:%M"))
+    )
+    db.add(creator_member)
+    db.commit()
+
+    return {
+        "status": "ok",
+        "group_chat_id": new_group_chat.id,
+        "message": "Групповой чат создан"
+    }
+
+
+@app.post('/api/add_user_to_group/{group_chat_id}')
+async def api_add_user_to_group(group_chat_id: int, request: Request, number: int = Form(...), db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    # Проверяем, существует ли группа
+    group = db.query(GroupChat).filter(GroupChat.id == group_chat_id).first()
+    if not group:
+        return {"error": "Группа не найдена"}
+    
+    # Проверяем, является ли текущий пользователь создателем или членом группы
+    member = db.query(GroupMember).filter(
+        GroupMember.group_chat_id == group_chat_id,
+        GroupMember.user_id == current_user_id
+    ).first()
+    
+    if not member:
+        return {"error": "Вы не в этой группе"}
+    
+    # Находим пользователя по номеру
+    target_user = db.query(User).filter(User.number == number).first()
+    if not target_user:
+        return {"error": "Пользователь с таким номером не найден"}
+    
+    if target_user.id == current_user_id:
+        return {"error": "Вы уже в этой группе"}
+    
+    # Проверяем, не в группе ли уже пользователь
+    existing_member = db.query(GroupMember).filter(
+        GroupMember.group_chat_id == group_chat_id,
+        GroupMember.user_id == target_user.id
+    ).first()
+    
+    if existing_member:
+        return {"error": "Этот пользователь уже в группе"}
+    
+    # Добавляем пользователя в группу
+    new_member = GroupMember(
+        group_chat_id=group_chat_id,
+        user_id=target_user.id,
+        joined_at=str(datetime.datetime.now().strftime("%H:%M"))
+    )
+    db.add(new_member)
+    db.commit()
+    
+    # Уведомляем нового члена группы
+    await manager.send_notification(target_user.id, {
+        "type": "added_to_group",
+        "group_chat_id": group_chat_id,
+        "group_name": group.name
+    })
+    
+    return {
+        "status": "ok",
+        "message": "Пользователь добавлен в группу",
+        "user": {
+            "id": target_user.id,
+            "username": target_user.username,
+            "number": target_user.number,
+            "avatar": target_user.avatar
+        }
+    }
+
+
+@app.get('/api/group_chats')
+def api_get_group_chats(request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    # Получаем все группы, в которых участвует пользователь
+    members = db.query(GroupMember).filter(GroupMember.user_id == current_user_id).all()
+    
+    result = []
+    for member in members:
+        group = db.query(GroupChat).filter(GroupChat.id == member.group_chat_id).first()
+        
+        # Последнее сообщение в группе
+        last_msg = db.query(GroupMessage).filter(
+            GroupMessage.group_chat_id == group.id,
+            GroupMessage.is_deleted == False
+        ).order_by(GroupMessage.id.desc()).first()
+        
+        last_message_text = None
+        if last_msg:
+            last_message_text = encrypt(last_msg.text, key)
+        
+        # Получаем количество членов группы
+        members_count = db.query(GroupMember).filter(GroupMember.group_chat_id == group.id).count()
+        
+        result.append({
+            "group_chat_id": group.id,
+            "name": group.name,
+            "description": group.description,
+            "avatar": group.avatar,
+            "creator_id": group.creator_id,
+            "members_count": members_count,
+            "last_message": {
+                "text": last_message_text,
+                "timestamp": last_msg.timestamp if last_msg else None
+            } if last_msg else None
+        })
+    
+    return result
+
+
+@app.get('/api/group_members/{group_chat_id}')
+def api_get_group_members(group_chat_id: int, request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    # Проверяем, в группе ли текущий пользователь
+    member = db.query(GroupMember).filter(
+        GroupMember.group_chat_id == group_chat_id,
+        GroupMember.user_id == current_user_id
+    ).first()
+    
+    if not member:
+        return {"error": "Вы не в этой группе"}
+    
+    # Получаем группу
+    group = db.query(GroupChat).filter(GroupChat.id == group_chat_id).first()
+    if not group:
+        return {"error": "Группа не найдена"}
+    
+    # Получаем членов группы
+    members = db.query(GroupMember).filter(GroupMember.group_chat_id == group_chat_id).all()
+    
+    result = []
+    for member in members:
+        user = db.query(User).filter(User.id == member.user_id).first()
+        result.append({
+            "user_id": user.id,
+            "username": user.username,
+            "number": user.number,
+            "avatar": user.avatar,
+            "is_creator": user.id == group.creator_id
+        })
+    
+    return {
+        "group": {
+            "id": group.id,
+            "name": group.name,
+            "description": group.description,
+            "avatar": group.avatar,
+            "creator_id": group.creator_id
+        },
+        "members": result
+    }
+
+
+@app.get('/api/group_messages/{group_chat_id}')
+def api_get_group_messages(group_chat_id: int, request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    # Проверяем, в группе ли текущий пользователь
+    member = db.query(GroupMember).filter(
+        GroupMember.group_chat_id == group_chat_id,
+        GroupMember.user_id == current_user_id
+    ).first()
+    
+    if not member:
+        return {"error": "Вы не в этой группе"}
+    
+    # Получаем сообщения
+    messages = db.query(GroupMessage).filter(
+        GroupMessage.group_chat_id == group_chat_id,
+        GroupMessage.is_deleted == False
+    ).order_by(GroupMessage.id).all()
+    
+    result = []
+    for msg in messages:
+        sender = db.query(User).filter(User.id == msg.sender_id).first()
+        result.append({
+            "id": msg.id,
+            "text": encrypt(msg.text, key),
+            "timestamp": msg.timestamp,
+            "sender_id": msg.sender_id,
+            "sender_username": sender.username if sender else "Unknown",
+            "sender_avatar": sender.avatar if sender else "",
+            "is_mine": msg.sender_id == current_user_id
+        })
+    
+    return result
+
+
+@app.post('/api/send_group_message/{group_chat_id}')
+async def api_send_group_message(
+    group_chat_id: int,
+    request: Request,
+    text: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    # Проверяем, в группе ли текущий пользователь
+    member = db.query(GroupMember).filter(
+        GroupMember.group_chat_id == group_chat_id,
+        GroupMember.user_id == current_user_id
+    ).first()
+    
+    if not member:
+        return {"error": "Вы не в этой группе"}
+    
+    # Создаём сообщение
+    new_message = GroupMessage(
+        group_chat_id=group_chat_id,
+        sender_id=current_user_id,
+        text=encrypt(text, key),
+        timestamp=str(datetime.datetime.now().strftime("%H:%M")),
+        is_deleted=False
+    )
+    
+    db.add(new_message)
+    db.commit()
+    
+    # Получаем информацию об отправителе
+    sender = db.query(User).filter(User.id == current_user_id).first()
+    
+    # Уведомляем всех членов группы о новом сообщении
+    members = db.query(GroupMember).filter(GroupMember.group_chat_id == group_chat_id).all()
+    for member in members:
+        if member.user_id != current_user_id:  # Не отправляем сообщение самому отправителю
+            await manager.send_notification(member.user_id, {
+                "type": "new_group_message",
+                "group_chat_id": group_chat_id,
+                "message": {
+                    "id": new_message.id,
+                    "text": text,
+                    "timestamp": new_message.timestamp,
+                    "sender_id": current_user_id,
+                    "sender_username": sender.username,
+                    "sender_avatar": sender.avatar
+                }
+            })
+    
+    return {
+        "status": "ok",
+        "message_id": new_message.id
+    }
+
+
+@app.delete('/api/delete_group_message/{message_id}')
+async def api_delete_group_message(message_id: int, request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    message = db.query(GroupMessage).filter(GroupMessage.id == message_id).first()
+    if not message:
+        return {"error": "Сообщение не найдено"}
+    
+    # Только отправитель может удалить сообщение
+    if message.sender_id != current_user_id:
+        return {"error": "Нет доступа"}
+    
+    message.is_deleted = True
+    db.commit()
+    
+    # Уведомляем всех членов группы об удалении
+    members = db.query(GroupMember).filter(GroupMember.group_chat_id == message.group_chat_id).all()
+    for member in members:
+        await manager.send_notification(member.user_id, {
+            "type": "group_message_deleted",
+            "message_id": message_id,
+            "group_chat_id": message.group_chat_id
+        })
+    
+    return {"status": "ok", "message": "Сообщение удалено"}
+
+
+@app.delete('/api/remove_user_from_group/{group_chat_id}/{remove_user_id}')
+async def api_remove_user_from_group(group_chat_id: int, remove_user_id: int, request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    # Получаем группу
+    group = db.query(GroupChat).filter(GroupChat.id == group_chat_id).first()
+    if not group:
+        return {"error": "Группа не найдена"}
+    
+    # Проверяем, является ли текущий пользователь создателем
+    if group.creator_id != current_user_id and current_user_id != remove_user_id:
+        return {"error": "Нет прав"}
+    
+    # Удаляем пользователя из группы
+    member = db.query(GroupMember).filter(
+        GroupMember.group_chat_id == group_chat_id,
+        GroupMember.user_id == remove_user_id
+    ).first()
+    
+    if not member:
+        return {"error": "Пользователь не в группе"}
+    
+    db.delete(member)
+    db.commit()
+    
+    # Уведомляем удаляемого пользователя
+    await manager.send_notification(remove_user_id, {
+        "type": "removed_from_group",
+        "group_chat_id": group_chat_id
+    })
+    
+    return {"status": "ok", "message": "Пользователь удалён из группы"}
+
+
+@app.delete('/api/delete_group_chat/{group_chat_id}')
+async def api_delete_group_chat(group_chat_id: int, request: Request, db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    # Получаем группу
+    group = db.query(GroupChat).filter(GroupChat.id == group_chat_id).first()
+    if not group:
+        return {"error": "Группа не найдена"}
+    
+    # Проверяем, является ли текущий пользователь создателем
+    if group.creator_id != current_user_id:
+        return {"error": "Только создатель может удалить группу"}
+    
+    # Удаляем всех членов группы
+    db.query(GroupMember).filter(GroupMember.group_chat_id == group_chat_id).delete()
+    
+    # Удаляем все сообщения группы
+    db.query(GroupMessage).filter(GroupMessage.group_chat_id == group_chat_id).delete()
+    
+    # Удаляем саму группу
+    db.delete(group)
+    db.commit()
+    
+    return {"status": "ok", "message": "Группа удалена"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)

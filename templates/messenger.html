@@ -122,6 +122,95 @@
             border-left: 3px solid #667eea;
         }
 
+        /* ===== МЕНЮ ЧАТА (ТРИ ТОЧКИ) ===== */
+        .chat-actions {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .chat-menu-btn {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px 8px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.2s, color 0.2s, background 0.2s;
+        }
+
+        .chat-list-item:hover .chat-menu-btn {
+            opacity: 1;
+        }
+
+        .chat-menu-btn:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .chat-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            z-index: 100;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .chat-dropdown.show {
+            display: block;
+        }
+
+        .chat-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.15s;
+            color: #222;
+            font-size: 0.85rem;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .chat-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .chat-dropdown-item.delete {
+            color: #e53935;
+        }
+
+        .chat-dropdown-item.delete:hover {
+            background: #ffebee;
+        }
+
+        .chat-dropdown-item.block {
+            color: #f57c00;
+        }
+
+        .chat-dropdown-item.block:hover {
+            background: #fff3e0;
+        }
+
+        .chat-dropdown-item.unblock {
+            color: #43a047;
+        }
+
+        .chat-dropdown-item.unblock:hover {
+            background: #e8f5e9;
+        }
+
         .chat-list-item img {
             width: 48px;
             height: 48px;
@@ -551,12 +640,14 @@
                 <button onclick="openModal()" title="Новый чат">
                     <i class="fa-solid fa-user-plus"></i>
                 </button>
+                <a href="/group_chat_page" title="Групповые чаты">
+                    <i class="fa-solid fa-users"></i>
+                </a>
                 <a href="/profile" title="Профиль">
                     <i class="fa-solid fa-user"></i>
                 </a>
             </div>
         </div>
-
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="Поиск по чатам..." oninput="filterChats()">
         </div>
@@ -586,11 +677,26 @@
             <div class="messages-container" id="messagesContainer">
                 <!-- Сообщения будут загружены сюда -->
             </div>
+            
+            <div id="emojiPicker" style="
+                display:none;
+                position:absolute;
+                bottom:80px;
+                right:20px;
+                background:#fff;
+                border:1px solid #ddd;
+                border-radius:10px;
+                padding:10px;
+                max-width:300px;
+                max-height:200px;
+                overflow-y:auto;
+                z-index:1000;
+            "></div>
 
             <form class="message-input-area" id="messageForm" onsubmit="sendMessage(event)">
                 <input type="text" id="messageInput" placeholder="Введите сообщение..." autocomplete="off" required>
-                <button type="submit">
-                    <i class="fa-solid fa-paper-plane"></i>
+                <button type="button" onclick="toggleEmojiPicker()" style="background:none;border:none;font-size:22px;cursor:pointer;">
+                    😊
                 </button>
             </form>
         </div>
@@ -626,7 +732,67 @@
     </div>
 </div>
 
+<!-- Модальное окно профиля пользователя -->
+<div class="modal" id="profileModal">
+    <div class="modal-content" style="text-align: center; max-width: 350px;">
+        <div id="profileContent">
+            <!-- Контент будет загружен динамически -->
+        </div>
+        <div class="modal-buttons" style="margin-top: 20px;">
+            <button type="button" class="btn-secondary" onclick="closeProfileModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
 <script>
+
+    let EMOJIS = [];
+
+    async function loadEmojis() {
+        const res = await fetch('/api/emojis');
+        EMOJIS = await res.json();
+    }
+
+    function toggleEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+
+        if (picker.style.display === 'none') {
+            picker.style.display = 'block';
+        } else {
+            picker.style.display = 'none';
+            return;
+        }
+
+        // если уже загружены — не создаём заново
+        if (picker.innerHTML !== '') return;
+
+        EMOJIS.forEach(e => {
+            const span = document.createElement('span');
+            span.textContent = e;
+            span.style.cursor = 'pointer';
+            span.style.fontSize = '20px';
+            span.style.margin = '5px';
+
+            span.onclick = () => {
+                const input = document.getElementById('messageInput');
+                input.value += e;
+                input.focus();
+            };
+
+            picker.appendChild(span);
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        const picker = document.getElementById('emojiPicker');
+        const btn = e.target.closest('button');
+
+        if (!picker.contains(e.target) && (!btn || btn.innerText !== '😊')) {
+            picker.style.display = 'none';
+        }
+    });
+
+
     let currentChatId = null;
     let refreshInterval = null;
     let ws = null;
@@ -821,20 +987,47 @@
             const li = document.createElement('li');
             li.className = 'chat-list-item';
             li.dataset.chatId = chat.chat_id;
-            li.onclick = () => openChat(chat.chat_id, chat.partner);
             
             const avatar = chat.partner.avatar || `https://via.placeholder.com/48?text=${chat.partner.username[0]}`;
             const lastMsg = chat.last_message ? chat.last_message.text : 'Нет сообщений';
             const time = chat.last_message ? chat.last_message.timestamp : '';
+            
+            // Определяем, какой показывать блок/разблок
+            const isBlocked = chat.partner.is_blocked_by_me;
+            const blockBtnDisplay = isBlocked ? 'none' : 'inline-block';
+            const unblockBtnDisplay = isBlocked ? 'inline-block' : 'none';
 
             li.innerHTML = `
-                <img src="${avatar}" alt="${chat.partner.username}">
-                <div class="chat-item-info">
-                    <div class="chat-item-name">${chat.partner.username}</div>
+                <img src="${avatar}" alt="${chat.partner.username}" onclick="openChat(${chat.chat_id}, chat.partner)" style="cursor: pointer;">
+                <div class="chat-item-info" onclick="openChat(${chat.chat_id}, chat.partner)" style="cursor: pointer;">
+                    <div class="chat-item-name">${chat.partner.username}${isBlocked ? ' <i class="fa-solid fa-ban" style="color: #f57c00;" title="Заблокирован"></i>' : ''}</div>
                     <div class="chat-item-last-msg">${lastMsg}</div>
                 </div>
                 <div class="chat-item-time">${time}</div>
+                <div class="chat-actions" style="position: relative; display: inline-block;">
+                    <button class="chat-menu-btn" onclick="toggleChatMenu(event, ${chat.chat_id}, ${chat.partner.id})" title="Меню">
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </button>
+                    <div class="chat-dropdown" id="chat-menu-${chat.chat_id}">
+                        <button class="chat-dropdown-item delete" onclick="deleteChat(event, ${chat.chat_id})">
+                            <i class="fa-solid fa-trash"></i> Удалить чат
+                        </button>
+                        <button class="chat-dropdown-item unblock" onclick="unblockUserFromChat(event, ${chat.partner.id}, ${chat.chat_id})" id="unblock-btn-${chat.chat_id}" style="display: ${unblockBtnDisplay};">
+                            <i class="fa-solid fa-user-check"></i> Разблокировать пользователя
+                        </button>
+                        <button class="chat-dropdown-item block" onclick="blockUserFromChat(event, ${chat.partner.id}, ${chat.chat_id})" id="block-btn-${chat.chat_id}" style="display: ${blockBtnDisplay};">
+                            <i class="fa-solid fa-ban"></i> Заблокировать пользователя
+                        </button>
+                    </div>
+                </div>
             `;
+            
+            // Добавляем обработчик клика для открытия чата (но не на кнопки меню)
+            li.addEventListener('click', (e) => {
+                if (!e.target.closest('.chat-menu-btn') && !e.target.closest('.chat-dropdown')) {
+                    openChat(chat.chat_id, chat.partner);
+                }
+            });
             
             chatList.appendChild(li);
         });
@@ -843,6 +1036,11 @@
     // Открытие чата
     async function openChat(chatId, partner) {
         currentChatId = chatId;
+
+        // Проверяем, не заблокировал ли нас партнёр
+        if (partner.is_blocked_by_partner) {
+            alert('Этот пользователь заблокировал вас. Вы не можете отправлять сообщения.');
+        }
 
         // Убираем активный класс у всех
         document.querySelectorAll('.chat-list-item').forEach(item => {
@@ -861,8 +1059,20 @@
         // Заполняем заголовок
         const avatar = partner.avatar || `https://via.placeholder.com/42?text=${partner.username[0]}`;
         document.getElementById('chatAvatar').src = avatar;
+        document.getElementById('chatAvatar').onclick = () => showPartnerProfile(partner);
         document.getElementById('chatName').textContent = partner.username;
-        document.getElementById('chatStatus').textContent = partner.description || 'в сети';
+        document.getElementById('chatName').onclick = () => showPartnerProfile(partner);
+        document.getElementById('chatName').style.cursor = 'pointer';
+        document.getElementById('chatAvatar').style.cursor = 'pointer';
+        
+        // Показываем статус с учётом блокировки
+        if (partner.is_blocked_by_partner) {
+            document.getElementById('chatStatus').textContent = 'Вы заблокированы';
+            document.getElementById('chatStatus').style.color = '#e53935';
+        } else {
+            document.getElementById('chatStatus').textContent = partner.description || 'в сети';
+            document.getElementById('chatStatus').style.color = '#888';
+        }
 
         // Загружаем сообщения
         await loadMessages(chatId);
@@ -929,7 +1139,7 @@
                             <i class="fa-solid fa-ellipsis"></i>
                         </button>
                         <div class="message-dropdown" id="msg-menu-${msg.id}">
-                            <button class="message-dropdown-item edit" onclick="editMessage(${msg.id}, '${msg.text.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n')}')">
+                            <button class="message-dropdown-item edit" onclick="editMessage(${msg.id})">
                                 <i class="fa-solid fa-pen"></i> Редактировать
                             </button>
                             <button class="message-dropdown-item delete" onclick="deleteMessage(${msg.id}, 'all')">
@@ -1009,11 +1219,66 @@
 
         const result = await response.json();
         
+        if (result.error) {
+            alert(result.error);
+            // Если ошибка блокировки - обновляем чат чтобы показать статус
+            if (result.error.includes('заблокирован')) {
+                await loadChats();
+                await loadMessages(currentChatId);
+            }
+            return;
+        }
+        
         input.value = '';
         
         // Обновляем сообщения и список чатов
         await loadMessages(currentChatId);
         await loadChats();
+    }
+
+    // Удаление чата
+    async function deleteChat(event, chatId) {
+        event.stopPropagation();
+
+        if (!confirm('Вы уверены? Этот чат будет удалён навсегда.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/delete_chat/${chatId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'ok') {
+                // Если удаляем текущий открытый чат
+                if (currentChatId === chatId) {
+                    currentChatId = null;
+                    document.getElementById('noChatSelected').style.display = 'flex';
+                    document.getElementById('activeChat').style.display = 'none';
+                    if (refreshInterval) clearInterval(refreshInterval);
+                }
+
+                // Обновляем список чатов с анимацией
+                const chatItem = document.querySelector(`[data-chat-id="${chatId}"]`);
+                if (chatItem) {
+                    chatItem.style.transition = 'opacity 0.3s, transform 0.3s';
+                    chatItem.style.opacity = '0';
+                    chatItem.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        loadChats();
+                    }, 300);
+                } else {
+                    await loadChats();
+                }
+            } else {
+                alert('Ошибка при удалении: ' + (result.error || 'Неизвестная ошибка'));
+            }
+        } catch (e) {
+            console.error('Ошибка при удалении чата:', e);
+            alert('Ошибка при удалении чата');
+        }
     }
 
     // Создание нового чата
@@ -1088,15 +1353,163 @@
     }
 
     // Закрыть меню при клике вне его
-    document.addEventListener('click', () => {
+    document.addEventListener('click', (e) => {
         document.querySelectorAll('.message-dropdown.show').forEach(menu => {
             menu.classList.remove('show');
+        });
+        document.querySelectorAll('.chat-dropdown.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    });
+
+    // ===== МЕНЮ ЧАТА (ТРИ ТОЧКИ) =====
+    function toggleChatMenu(event, chatId, partnerId) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        // Закрываем все другие меню
+        document.querySelectorAll('.chat-dropdown.show').forEach(menu => {
+            if (menu.id !== `chat-menu-${chatId}`) {
+                menu.classList.remove('show');
+            }
+        });
+
+        // Переключаем текущее меню
+        const menu = document.getElementById(`chat-menu-${chatId}`);
+        if (menu) {
+            menu.classList.toggle('show');
+        }
+    }
+
+    // Блокировка пользователя из чата
+    async function blockUserFromChat(event, userId, chatId) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        if (!confirm('Вы уверены, что хотите заблокировать этого пользователя? Вы не сможете ему писать.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/block_user/${userId}`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'ok') {
+                // Закрываем меню
+                document.querySelectorAll('.chat-dropdown.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+
+                alert('Пользователь заблокирован');
+                await loadChats();
+                
+                // Обновляем текущий чат чтобы показать статус блокировки
+                if (currentChatId === chatId) {
+                    await loadMessages(chatId);
+                }
+            } else {
+                alert('Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+            }
+        } catch (e) {
+            console.error('Ошибка при блокировке:', e);
+            alert('Ошибка при блокировке пользователя');
+        }
+    }
+
+    // Разблокировка пользователя
+    async function unblockUserFromChat(event, userId, chatId) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        if (!confirm('Вы уверены, что хотите разблокировать этого пользователя?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/unblock_user/${userId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'ok') {
+                // Закрываем меню
+                document.querySelectorAll('.chat-dropdown.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+
+                alert('Пользователь разблокирован');
+                await loadChats();
+                
+                // Если чат открыт - обновляем сообщения
+                if (currentChatId === chatId) {
+                    await loadMessages(chatId);
+                }
+            } else {
+                alert('Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+            }
+        } catch (e) {
+            console.error('Ошибка при разблокировке:', e);
+            alert('Ошибка при разблокировке пользователя');
+        }
+    }
+
+    // Показать профиль пользователя
+    function showPartnerProfile(partner) {
+        const avatar = partner.avatar || `https://via.placeholder.com/100?text=${partner.username[0]}`;
+        const phone = partner.number || 'Не указан';
+        const address = partner.adders || 'Не указан';
+        const description = partner.description || 'Нет описания';
+
+        const profileHtml = `
+            <div style="margin-bottom: 15px;">
+                <img src="${avatar}" alt="${partner.username}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #667eea; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #222; font-size: 1.5rem;">${partner.username}</h2>
+            </div>
+            <div style="text-align: left; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: #667eea;"><i class="fa-solid fa-phone"></i> Телефон:</strong>
+                    <p style="margin: 5px 0 0 0; color: #333;">${phone}</p>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: #667eea;"><i class="fa-solid fa-location-dot"></i> Адрес:</strong>
+                    <p style="margin: 5px 0 0 0; color: #333;">${address}</p>
+                </div>
+                <div>
+                    <strong style="color: #667eea;"><i class="fa-solid fa-circle-info"></i> Описание:</strong>
+                    <p style="margin: 5px 0 0 0; color: #333;">${description}</p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('profileContent').innerHTML = profileHtml;
+        document.getElementById('profileModal').classList.add('show');
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profileModal').classList.remove('show');
+    }
+
+    // Закрывать все модальные окна при клике вне них
+    document.addEventListener('click', (e) => {
+        // Закрываем модальные окна при клике вне контента
+        const modals = ['editMessageModal', 'addChatModal', 'profileModal'];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal && modal.classList.contains('show') && e.target === modal) {
+                modal.classList.remove('show');
+            }
         });
     });
 
     // Удаление сообщения
     async function deleteMessage(messageId, mode) {
         // mode: 'self' = удалить у себя, 'all' = удалить у всех
+        console.log(`Попытка удалить сообщение ${messageId}, режим: ${mode}`);
+        
         const confirmText = mode === 'all' 
             ? 'Удалить это сообщение у всех?' 
             : 'Удалить это сообщение у себя?';
@@ -1110,13 +1523,21 @@
                 ? `/api/delete_message/${messageId}` 
                 : `/api/delete_message_self/${messageId}`;
 
+            console.log(`Отправляем DELETE запрос на ${endpoint}`);
+            
             const response = await fetch(endpoint, {
                 method: 'DELETE'
             });
 
             const result = await response.json();
+            console.log(`Ответ сервера:`, result);
 
             if (result.status === 'ok') {
+                // Закрываем меню
+                document.querySelectorAll('.message-dropdown.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+
                 // Анимация удаления
                 const msgElement = document.querySelector(`[data-msg-id="${messageId}"]`);
                 if (msgElement) {
@@ -1126,13 +1547,11 @@
                     setTimeout(() => msgElement.remove(), 300);
                 }
 
-                // Обновляем список чатов
-                await loadChats();
-
-                // Если удалили у всех — уведомим собеседника через WebSocket
-                if (mode === 'all' && result.partner_id) {
-                    // Партнёр получит уведомление через WebSocket
-                }
+                // Перезагружаем сообщения и список чатов
+                setTimeout(async () => {
+                    await loadMessages(currentChatId);
+                    await loadChats();
+                }, 300);
             } else {
                 alert('Ошибка при удалении: ' + (result.error || 'Неизвестная ошибка'));
             }
@@ -1143,7 +1562,11 @@
     }
 
     // ===== РЕДАКТИРОВАНИЕ СООБЩЕНИЯ =====
-    function editMessage(messageId, currentText) {
+    function editMessage(messageId) {
+        // Получаем текст из div сообщения
+        const msgElement = document.querySelector(`[data-msg-id="${messageId}"]`);
+        const currentText = msgElement ? msgElement.querySelector('.message-text').textContent : '';
+        
         // Закрываем меню
         document.querySelectorAll('.message-dropdown.show').forEach(menu => {
             menu.classList.remove('show');
@@ -1174,10 +1597,10 @@
         }
 
         const formData = new FormData();
-        formData.append('new_message', newText);
+        formData.append('new_text', newText);
 
         try {
-            const response = await fetch(`/api/update_message/${messageId}`, {
+            const response = await fetch(`/api/edit_message/${messageId}`, {
                 method: 'PUT',
                 body: formData
             });
