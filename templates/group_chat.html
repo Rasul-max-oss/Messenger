@@ -222,24 +222,29 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
         .message {
             display: flex;
             align-items: flex-end;
             gap: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .message.own {
             justify-content: flex-end;
         }
 
+        .message.own .message-content {
+            align-items: flex-end;
+        }
+
         .message-content {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
+            align-items: flex-start;
         }
 
         .sender-avatar {
@@ -250,35 +255,56 @@
             flex-shrink: 0;
         }
 
+        .message.own .sender-avatar {
+            display: none;
+        }
+
         .message-bubble {
             max-width: 60%;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: 12px;
             background: white;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
             word-wrap: break-word;
+            border-bottom-left-radius: 4px;
         }
 
         .message.own .message-bubble {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 4px;
         }
 
         .sender-name {
-            font-size: 12px;
+            font-size: 11px;
             color: #999;
-            margin-bottom: 2px;
+            margin-left: 4px;
+            display: none;
+        }
+
+        .message.own .sender-name {
+            display: none;
+        }
+
+        .message:not(.own) .sender-name {
+            display: block;
         }
 
         .message-text {
             font-size: 14px;
             line-height: 1.4;
+            margin-bottom: 2px;
         }
 
         .message-time {
-            font-size: 11px;
-            color: #bbb;
-            margin-top: 2px;
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 1px;
+        }
+
+        .message.own .message-time {
+            text-align: right;
         }
 
         .message-input-area {
@@ -306,6 +332,76 @@
             outline: none;
             padding: 12px 0;
             font-size: 14px;
+        }
+
+        .emoji-btn {
+            background: transparent;
+            border: none;
+            color: #667eea;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .emoji-btn:hover {
+            opacity: 0.7;
+        }
+
+        .emoji-picker {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+
+        .emoji-picker.hidden {
+            display: none;
+        }
+
+        .emoji-item {
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            text-align: center;
+        }
+
+        .emoji-item:hover {
+            background: #f0f0f0;
+        }
+
+        .not-in-group-message {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            text-align: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .not-in-group-message i {
+            font-size: 64px;
+            opacity: 0.5;
+        }
+
+        .not-in-group-message p {
+            font-size: 1rem;
+            color: #666;
         }
 
         .send-btn {
@@ -529,6 +625,11 @@
             opacity: 0.5;
         }
 
+        .emoji-picker-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
         @media (max-width: 768px) {
             .members-panel {
                 display: none;
@@ -540,6 +641,10 @@
 
             .message-bubble {
                 max-width: 80%;
+            }
+
+            .emoji-picker {
+                right: 0;
             }
         }
     </style>
@@ -576,6 +681,11 @@
                 <p>Выберите группу для просмотра</p>
             </div>
 
+            <div class="not-in-group-message" id="notInGroupMessage" style="display: none;">
+                <i class="fas fa-ban"></i>
+                <p>Вы не состоите в этой группе</p>
+            </div>
+
             <!-- ЗАГОЛОВОК ЧАТА -->
             <div id="chatWindow" style="display: none; flex: 1; display: flex; flex-direction: column;" class="chat-window-hidden">
                 <div class="chat-header-bar">
@@ -595,7 +705,13 @@
                 <div class="messages-container" id="messagesContainer"></div>
 
                 <!-- ВВОД СООБЩЕНИЯ -->
-                <div class="message-input-area">
+                <div class="message-input-area" style="position: relative;">
+                    <div class="emoji-picker-wrapper">
+                        <button class="emoji-btn" id="emojiBtn" title="Смайлики" type="button">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                        <div class="emoji-picker hidden" id="emojiPicker"></div>
+                    </div>
                     <div class="input-wrapper">
                         <input type="text" id="messageInput" placeholder="Введите сообщение...">
                     </div>
@@ -667,6 +783,9 @@
         let currentUserId = null;
         let ws = null;
 
+        // Список из 20 популярных смайликов
+        const popularEmojis = ['😀', '😂', '😍', '😎', '🥰', '😘', '😢', '😡', '🤔', '👍', '👏', '🎉', '🎊', '🌟', '❤️', '🔥', '💯', '😈', '🤗', '✨'];
+
         // Получение текущего пользователя из cookie
         function getCurrentUserId() {
             const name = "user_id=";
@@ -682,6 +801,40 @@
         }
 
         currentUserId = getCurrentUserId();
+
+        // Инициализация emoji picker
+        function initEmojiPicker() {
+            const emojiPicker = document.getElementById('emojiPicker');
+            const emojiBtn = document.getElementById('emojiBtn');
+            const messageInput = document.getElementById('messageInput');
+
+            // Заполняем emoji picker
+            emojiPicker.innerHTML = '';
+            popularEmojis.forEach(emoji => {
+                const span = document.createElement('span');
+                span.className = 'emoji-item';
+                span.textContent = emoji;
+                span.onclick = () => {
+                    messageInput.value += emoji;
+                    messageInput.focus();
+                    emojiPicker.classList.add('hidden');
+                };
+                emojiPicker.appendChild(span);
+            });
+
+            // Переключение видимости picker
+            emojiBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                emojiPicker.classList.toggle('hidden');
+            });
+
+            // Закрытие picker при клике вне его
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.emoji-picker-wrapper')) {
+                    emojiPicker.classList.add('hidden');
+                }
+            });
+        }
 
         // Загрузка групп
         async function loadGroupChats() {
@@ -705,6 +858,7 @@
                 emptyState.style.display = 'flex';
                 document.getElementById('noGroupSelected').style.display = 'flex';
                 document.getElementById('chatWindow').style.display = 'none';
+                document.getElementById('notInGroupMessage').style.display = 'none';
                 document.getElementById('membersPanel').style.display = 'none';
                 // Автоматически открываем модал создания группы
                 openModal('createGroupModal');
@@ -732,6 +886,7 @@
         async function selectGroup(group) {
             currentGroupId = group.group_chat_id;
             document.getElementById('noGroupSelected').style.display = 'none';
+            document.getElementById('notInGroupMessage').style.display = 'none';
             document.getElementById('chatWindow').style.display = 'flex';
             document.getElementById('membersPanel').style.display = 'flex';
 
@@ -753,8 +908,17 @@
         async function loadGroupMessages() {
             try {
                 const response = await fetch(`/api/group_messages/${currentGroupId}`);
-                const messages = await response.json();
-                displayMessages(messages);
+                const data = await response.json();
+                
+                // Проверка на ошибку (если пользователь не в группе)
+                if (data.error) {
+                    document.getElementById('chatWindow').style.display = 'none';
+                    document.getElementById('notInGroupMessage').style.display = 'flex';
+                    document.getElementById('membersPanel').style.display = 'none';
+                    return;
+                }
+                
+                displayMessages(data);
             } catch (error) {
                 console.error('Ошибка загрузки сообщений:', error);
             }
@@ -768,16 +932,30 @@
             messages.forEach(msg => {
                 const div = document.createElement('div');
                 div.className = `message${msg.is_mine ? ' own' : ''}`;
-                div.innerHTML = `
-                    ${!msg.is_mine ? `<img src="${msg.sender_avatar}" alt="avatar" class="sender-avatar">` : ''}
-                    <div class="message-content">
-                        ${!msg.is_mine ? `<div class="sender-name">${msg.sender_username}</div>` : ''}
-                        <div class="message-bubble">
-                            <div class="message-text">${msg.text}</div>
-                            <div class="message-time">${msg.timestamp}</div>
+                
+                if (msg.is_mine) {
+                    // Собственные сообщения
+                    div.innerHTML = `
+                        <div class="message-content">
+                            <div class="message-bubble">
+                                <div class="message-text">${msg.text}</div>
+                                <div class="message-time">${msg.timestamp}</div>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } else {
+                    // Сообщения других пользователей
+                    div.innerHTML = `
+                        <img src="${msg.sender_avatar}" alt="avatar" class="sender-avatar">
+                        <div class="message-content">
+                            <div class="sender-name">${msg.sender_username}</div>
+                            <div class="message-bubble">
+                                <div class="message-text">${msg.text}</div>
+                                <div class="message-time">${msg.timestamp}</div>
+                            </div>
+                        </div>
+                    `;
+                }
                 container.appendChild(div);
             });
 
@@ -790,6 +968,15 @@
             try {
                 const response = await fetch(`/api/group_members/${currentGroupId}`);
                 const data = await response.json();
+                
+                // Проверка на ошибку (если пользователь не в группе)
+                if (data.error) {
+                    document.getElementById('chatWindow').style.display = 'none';
+                    document.getElementById('notInGroupMessage').style.display = 'flex';
+                    document.getElementById('membersPanel').style.display = 'none';
+                    return;
+                }
+                
                 displayMembers(data.members);
             } catch (error) {
                 console.error('Ошибка загрузки членов:', error);
@@ -926,6 +1113,7 @@
         // Загрузка групп при загрузке страницы
         window.addEventListener('load', () => {
             loadGroupChats();
+            initEmojiPicker();
         });
 
         // Обновление списка групп каждые 3 секунды
