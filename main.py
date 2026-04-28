@@ -138,12 +138,12 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
 
 @app.get('/')
 def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse("register.html", context={"request": request})
 
 
 @app.get('/login_page')
 def login_page(request: Request):
-    return templates.TemplateResponse('login.html', {"request": request})
+    return templates.TemplateResponse('login.html', context={"request": request})
 
 
 @app.post('/register')
@@ -189,7 +189,7 @@ def profile_page(request: Request, db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse("/login_page", status_code=303)
 
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user})
+    return templates.TemplateResponse("profile.html", context={"request": request, "user": user})
 
 
 @app.get('/logout')
@@ -206,7 +206,7 @@ def chats_page(request: Request, db: Session = Depends(get_db)):
     if not user_id:
         return RedirectResponse("/login_page", status_code=303)
 
-    return templates.TemplateResponse("messenger.html", {"request": request})
+    return templates.TemplateResponse("messenger.html", context={"request": request})
 
 
 # ===== API ЭНДПОИНТЫ =====
@@ -479,7 +479,7 @@ def add_number_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse("/login_page", status_code=303)
 
     user = db.query(User).filter(User.id == int(user_id)).first()
-    return templates.TemplateResponse("add_number.html", {"request": request, "user": user})
+    return templates.TemplateResponse("add_number.html", context={"request": request, "user": user})
 
 
 @app.get('/settings_page')
@@ -492,7 +492,7 @@ def settings_page(request: Request,db: Session = Depends(get_db)):
     if not user:
         return RedirectResponse("/login_page", status_code=303)
 
-    return templates.TemplateResponse('/settings.html', {"request": request, "user": user})
+    return templates.TemplateResponse('/settings.html', context={"request": request, "user": user})
 
 @app.post('/settings')
 def settings(request: Request,name: str = Form(None),password: str = Form(None),avatar: str = Form(None),description:str = Form(None),db: Session = Depends(get_db)):
