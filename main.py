@@ -1116,7 +1116,8 @@ async def api_send_group_message(
     )
     
     db.add(new_message)
-    db.commit()
+    db.commit() # Commit to get the message ID
+    db.refresh(new_message) # Refresh to ensure new_message.id is populated
     
     # Получаем информацию об отправителе
     sender = db.query(User).filter(User.id == current_user_id).first()
@@ -1124,19 +1125,21 @@ async def api_send_group_message(
     # Уведомляем всех членов группы о новом сообщении
     members = db.query(GroupMember).filter(GroupMember.group_chat_id == group_chat_id).all()
     for member in members:
-        if member.user_id != current_user_id:  # Не отправляем сообщение самому отправителю
-            await manager.send_notification(member.user_id, {
-                "type": "new_group_message",
-                "group_chat_id": group_chat_id,
-                "message": {
-                    "id": new_message.id,
-                    "text": text,
-                    "timestamp": new_message.timestamp,
-                    "sender_id": current_user_id,
-                    "sender_username": sender.username,
-                    "sender_avatar": sender.avatar
-                }
-            })
+        # Отправляем уведомление всем, включая отправителя
+        is_mine_for_recipient = (member.user_id == current_user_id)
+        await manager.send_notification(member.user_id, {
+            "type": "new_group_message",
+            "group_chat_id": group_chat_id,
+            "message": {
+                "id": new_message.id,
+                "text": text, # Отправляем расшифрованный текст для отображения
+                "timestamp": new_message.timestamp,
+                "sender_id": current_user_id,
+                "sender_username": sender.username,
+                "sender_avatar": sender.avatar,
+                "is_mine": is_mine_for_recipient
+            }
+        })
     
     return {
         "status": "ok",
@@ -1174,6 +1177,41 @@ async def api_delete_group_message(message_id: int, request: Request, db: Sessio
     
     return {"status": "ok", "message": "Сообщение удалено"}
 
+@app.put('/api/edit_group_message/{message_id}')
+async def api_edit_group_message(message_id: int, request: Request, new_text: str = Form(...), db: Session = Depends(get_db)):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    
+    message = db.query(GroupMessage).filter(GroupMessage.id == message_id).first()
+    if not message:
+        return {"error": "Сообщение не найдено"}
+    
+    # Только отправитель может редактировать
+    if message.sender_id != current_user_id:
+        return {"error": "Нет доступа"}
+    
+    message.text = encrypt(new_text, key)
+    db.commit() # Commit to save changes
+    db.refresh(message) # Refresh to ensure message.timestamp is current (though it doesn't change in this schema)
+    
+    # Уведомляем всех членов группы через WebSocket
+    members = db.query(GroupMember).filter(GroupMember.group_chat_id == message.group_chat_id).all()
+    for member in members:
+        await manager.send_notification(member.user_id, {
+            "type": "group_message_edited",
+            "message_id": message_id,
+            "group_chat_id": message.group_chat_id,
+            "new_text": new_text, # Отправляем расшифрованный текст для отображения
+            "timestamp": message.timestamp
+        })
+    
+    return {
+        "status": "ok",
+        "new_text": new_text
+    }
 
 @app.delete('/api/remove_user_from_group/{group_chat_id}/{remove_user_id}')
 async def api_remove_user_from_group(group_chat_id: int, remove_user_id: int, request: Request, db: Session = Depends(get_db)):
@@ -1242,6 +1280,33 @@ async def api_delete_group_chat(group_chat_id: int, request: Request, db: Sessio
     
     return {"status": "ok", "message": "Группа удалена"}
 
+@app.put('/api/update_group_settings/{group_chat_id}')
+async def api_update_group_settings(
+    group_chat_id: int, 
+    request: Request, 
+    name: str = Form(None), 
+    description: str = Form(None), 
+    db: Session = Depends(get_db)
+):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        return {"error": "Не авторизован"}
+
+    current_user_id = int(user_id)
+    group = db.query(GroupChat).filter(GroupChat.id == group_chat_id).first()
+    if not group: return {"error": "Группа не найдена"}
+
+    if group.creator_id != current_user_id:
+        return {"error": "Нет прав на редактирование настроек группы"}
+
+    if name is not None:
+        group.name = name
+    if description is not None:
+        group.description = description
+        
+    db.commit()
+
+    return {"status": "ok", "name": group.name, "description": group.description}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

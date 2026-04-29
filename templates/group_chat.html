@@ -237,14 +237,20 @@
         }
 
         .message.own .message-content {
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
             align-items: flex-end;
         }
 
-        .message-content {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            align-items: flex-start;
+         .message-content {
+            max-width: 75%;
+        }
+
+        .message-bubble {
+            width: fit-content;
+            max-width: 100%;
+            word-break: break-word;
         }
 
         .sender-avatar {
@@ -259,16 +265,6 @@
             display: none;
         }
 
-        .message-bubble {
-            max-width: 60%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            background: white;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-            word-wrap: break-word;
-            border-bottom-left-radius: 4px;
-        }
-
         .message.own .message-bubble {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -276,19 +272,49 @@
             border-bottom-right-radius: 4px;
         }
 
+        .message-bubble {
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+
         .sender-name {
             font-size: 11px;
             color: #999;
             margin-left: 4px;
-            display: none;
         }
 
-        .message.own .sender-name {
-            display: none;
+        /* Стили для меню сообщения */
+        .message-actions {
+            position: relative;
+            display: inline-block;
+            margin-left: 6px;
         }
+        .message-menu-btn {
+            background: none; border: none; color: inherit; cursor: pointer;
+            font-size: 0.85rem; opacity: 0.6; transition: opacity 0.2s;
+        }
+        .message:hover .message-menu-btn { opacity: 1; }
+        .message-dropdown {
+            display: none; position: absolute; right: 0; bottom: 100%;
+            background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 140px; z-index: 100; overflow: hidden; margin-bottom: 5px;
+        }
+        .message-dropdown.show { display: block; }
+        .message-dropdown-item {
+            display: flex; align-items: center; gap: 8px; padding: 10px 15px;
+            cursor: pointer; transition: background 0.15s; color: #222;
+            font-size: 0.85rem; border: none; background: none; width: 100%; text-align: left;
+        }
+        .message-dropdown-item:hover { background: #f5f5f5; }
+        .message-dropdown-item.delete { color: #e53935; }
 
-        .message:not(.own) .sender-name {
-            display: block;
+        /* Стили для удаления участника */
+        .remove-member-btn {
+            color: #e53935; background: none; border: none; cursor: pointer; padding: 4px; font-size: 14px;
         }
 
         .message-text {
@@ -528,6 +554,7 @@
             max-width: 400px;
             width: 90%;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
         }
 
         .modal-header {
@@ -650,6 +677,51 @@
     </style>
 </head>
 <body>
+    <!-- МОДАЛЬНОЕ ОКНО: ПАРАМЕТРЫ ГРУППЫ -->
+    <div class="modal" id="groupSettingsModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('groupSettingsModal')">&times;</button>
+            <div class="modal-header">Параметры группы</div>
+            <div id="groupSettingsContent">
+                <p id="settingsDesc" style="margin-bottom: 20px; color: #666;"></p>
+                <div id="adminActions" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 20px;">                    
+                    <div class="form-group">
+                        <label for="editGroupNameInput">Название группы:</label>
+                        <input type="text" id="editGroupNameInput" placeholder="Введите новое название">
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label for="editGroupDescriptionInput">Описание группы:</label>
+                        <textarea id="editGroupDescriptionInput" rows="3" placeholder="Введите новое описание"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveGroupSettings()">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
+                    <button class="btn btn-primary" style="background: #e53935; margin-top: 20px;" onclick="deleteGroup()">
+                        <i class="fas fa-trash"></i> Удалить группу
+                    </button>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeModal('groupSettingsModal')">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ СООБЩЕНИЯ -->
+    <div class="modal" id="editMessageModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('editMessageModal')">&times;</button>
+            <div class="modal-header">Редактировать сообщение</div>
+            <input type="hidden" id="editMsgId">
+            <div class="form-group">
+                <textarea id="editMsgText" rows="3" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd;"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="saveEditMessage()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <div class="messenger-container">
         <!-- ЛЕВАЯ ПАНЕЛЬ: СПИСОК ГРУПП -->
         <div class="sidebar">
@@ -694,7 +766,7 @@
                         <p id="membersCount"></p>
                     </div>
                     <div class="header-controls">
-                        <button id="settingsBtn">
+                        <button id="settingsBtn" onclick="openGroupSettings()">
                             <i class="fas fa-cog"></i>
                             Параметры
                         </button>
@@ -742,7 +814,7 @@
             <form id="createGroupForm">
                 <div class="form-group">
                     <label for="groupName">Название группы:</label>
-                    <input type="text" id="groupName" placeholder="Введите название" required>
+                    <input type="text" id="groupNameInput" placeholder="Введите название" required>
                 </div>
                 <div class="form-group">
                     <label for="groupDesc">Описание:</label>
@@ -781,6 +853,8 @@
     <script>
         let currentGroupId = null;
         let currentUserId = null;
+        let isCreator = false;
+        let currentGroupName = '';
         let ws = null;
 
         // Список из 20 популярных смайликов
@@ -801,6 +875,54 @@
         }
 
         currentUserId = getCurrentUserId();
+
+        // Инициализация WebSocket для реального времени
+        function initWebSocket() {
+            if (ws) ws.close();
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/${currentUserId}`);
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                // Обработка событий группы
+                if (data.group_chat_id && data.group_chat_id !== currentGroupId) {
+                    // Если пришло сообщение для другой группы, просто обновляем список чатов (для уведомлений/последнего сообщения)
+                    loadGroupChats();
+                    return;
+
+                }
+
+                switch(data.type) {
+                    case 'new_group_message':
+                        appendMessageToUI(data.message);
+                        break;
+                    case 'group_message_edited':
+                        updateMessageInUI(data.message_id, data.new_text);
+                        break;
+                    case 'group_message_deleted':
+                        removeMessageFromUI(data.message_id);
+                        break;
+                    case 'added_to_group':
+                        loadGroupChats();
+                        break;
+                    case 'removed_from_group':
+                        if (data.group_chat_id === currentGroupId) {
+                            location.reload(); // Или закрыть чат
+                        }
+                        // Если пользователь был удален из текущей группы,
+                        // то он должен быть перенаправлен или чат должен закрыться.
+                        // location.reload() - это простой способ.
+                        loadGroupChats();
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                console.log("WebSocket закрыт. Переподключение...");
+                setTimeout(initWebSocket, 3000);
+            };
+        }
 
         // Инициализация emoji picker
         function initEmojiPicker() {
@@ -885,6 +1007,7 @@
         // Выбор группы
         async function selectGroup(group) {
             currentGroupId = group.group_chat_id;
+            isCreator = group.creator_id === currentUserId;
             document.getElementById('noGroupSelected').style.display = 'none';
             document.getElementById('notInGroupMessage').style.display = 'none';
             document.getElementById('chatWindow').style.display = 'flex';
@@ -892,6 +1015,8 @@
 
             document.getElementById('groupName').textContent = group.name;
             document.getElementById('membersCount').textContent = `${group.members_count} участников`;
+            currentGroupName = group.name; // Store the group name
+            
 
             // Загружаем сообщения и членов группы
             await loadGroupMessages();
@@ -935,17 +1060,34 @@
                 
                 if (msg.is_mine) {
                     // Собственные сообщения
+                    div.id = `msg-${msg.id}`; // Добавляем ID для WebSocket-обновлений
                     div.innerHTML = `
                         <div class="message-content">
                             <div class="message-bubble">
                                 <div class="message-text">${msg.text}</div>
-                                <div class="message-time">${msg.timestamp}</div>
+                                <div class="message-time">
+                                    ${msg.timestamp}
+                                    <span class="message-actions">
+                                        <button class="message-menu-btn" onclick="toggleMessageMenu(event, ${msg.id})">
+                                            <i class="fa-solid fa-ellipsis"></i>
+                                        </button>
+                                        <div class="message-dropdown" id="msg-menu-${msg.id}">
+                                            <button class="message-dropdown-item" onclick="prepareEditMessage(${msg.id}, '${msg.text.replace(/'/g, "\\'")}')">
+                                                <i class="fas fa-edit"></i> Редактировать
+                                            </button>
+                                            <button class="message-dropdown-item delete" onclick="deleteGroupMessage(${msg.id})">
+                                                <i class="fas fa-trash"></i> Удалить у всех
+                                            </button>
+                                        </div>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     `;
                 } else {
                     // Сообщения других пользователей
                     div.innerHTML = `
+                        <div id="msg-${msg.id}"></div> <!-- Добавляем ID для WebSocket-обновлений -->
                         <img src="${msg.sender_avatar}" alt="avatar" class="sender-avatar">
                         <div class="message-content">
                             <div class="sender-name">${msg.sender_username}</div>
@@ -957,6 +1099,7 @@
                     `;
                 }
                 container.appendChild(div);
+                appendMessageToUI(msg, false); // Используем appendMessageToUI для единообразия
             });
 
             // Скролл вниз
@@ -964,6 +1107,7 @@
         }
 
         // Загрузка членов группы
+        // ... (остальной код displayMessages)
         async function loadGroupMembers() {
             try {
                 const response = await fetch(`/api/group_members/${currentGroupId}`);
@@ -997,6 +1141,7 @@
                         <div class="member-name">${member.username}</div>
                         <div class="member-role">${member.is_creator ? 'Создатель' : 'Участник'}</div>
                     </div>
+                    ${isCreator && !member.is_creator ? `<button class="remove-member-btn" onclick="removeMember(${member.user_id})" title="Удалить из группы"><i class="fas fa-user-minus"></i></button>` : ''}
                 `;
                 membersList.appendChild(li);
             });
@@ -1043,7 +1188,7 @@
             e.preventDefault();
 
             const formData = new FormData();
-            formData.append('name', document.getElementById('groupName').value);
+            formData.append('name', document.getElementById('groupNameInput').value);
             formData.append('description', document.getElementById('groupDesc').value);
             formData.append('avatar', document.getElementById('groupAvatar').value);
 
@@ -1096,6 +1241,120 @@
             }
         });
 
+        // Управление меню сообщений (три точки)
+        function toggleMessageMenu(event, messageId) {
+            event.stopPropagation();
+            document.querySelectorAll('.message-dropdown').forEach(m => {
+                if (m.id !== `msg-menu-${messageId}`) m.classList.remove('show');
+            });
+            document.getElementById(`msg-menu-${messageId}`).classList.toggle('show');
+        }
+        document.addEventListener('click', () => document.querySelectorAll('.message-dropdown').forEach(m => m.classList.remove('show')));
+
+        // Удаление сообщения (только у всех, так как модель GroupMessage не поддерживает индивидуальное скрытие)
+        async function deleteGroupMessage(messageId) {
+            if (!confirm('Удалить это сообщение у всех участников?')) return;
+            try {
+                const response = await fetch(`/api/delete_group_message/${messageId}`, { method: 'DELETE' });
+                if (response.ok) await loadGroupMessages();
+            } catch (error) { console.error('Ошибка:', error); }
+        }
+
+        // Редактирование сообщения
+        function prepareEditMessage(id, text) {
+            document.getElementById('editMsgId').value = id;
+            document.getElementById('editMsgText').value = text;
+            openModal('editMessageModal');
+        }
+        async function saveEditMessage() {
+            const id = document.getElementById('editMsgId').value;
+            const text = document.getElementById('editMsgText').value;
+            const formData = new FormData();
+            formData.append('new_text', text);
+            try {
+                const response = await fetch(`/api/edit_group_message/${id}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                if (response.ok) {
+                    closeModal('editMessageModal');
+                    // await loadGroupMessages(); // Больше не нужно, WebSocket обновит UI
+                    // WebSocket-уведомление от сервера обновит UI
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.error || 'Ошибка редактирования сообщения.');
+                }
+            } catch (error) { console.error('Ошибка:', error); }
+        }
+
+        // Открытие параметров группы
+        async function openGroupSettings() {
+            try {
+                const res = await fetch(`/api/group_members/${currentGroupId}`);
+                const data = await res.json();
+                
+                document.getElementById('settingsDesc').textContent = data.group.description || 'Описание отсутствует';
+                document.getElementById('adminActions').style.display = isCreator ? 'flex' : 'none';
+                document.getElementById('editGroupNameInput').value = data.group.name;
+                document.getElementById('editGroupDescriptionInput').value = data.group.description;
+                currentGroupName = data.group.name; // Store the group name
+                openModal('groupSettingsModal');
+            } catch (error) { console.error('Ошибка загрузки параметров группы:', error); }
+        }
+
+        // Удаление всей группы (только для создателя)
+        async function deleteGroup() {
+            if (!confirm(`ВНИМАНИЕ: Группа "${currentGroupName}" и вся переписка будут удалены навсегда. Продолжить?`)) return;
+            try {
+                const response = await fetch(`/api/delete_group_chat/${currentGroupId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    closeModal('groupSettingsModal');
+                    location.reload(); // Перезагружаем страницу, чтобы обновить UI после удаления группы
+                }
+            } catch (error) { console.error('Ошибка:', error); }
+        }
+
+        // Удаление пользователя из группы (только для создателя)
+        async function removeMember(userId) {
+            if (!confirm('Удалить участника из группы?')) return;
+            try {
+                const response = await fetch(`/api/remove_user_from_group/${currentGroupId}/${userId}`, { method: 'DELETE' });
+                if (response.ok) await loadGroupMembers();
+            } catch (error) { console.error('Ошибка:', error); }
+        }
+
+        // Сохранение настроек группы (Имя + Описание) одной кнопкой
+        async function saveGroupSettings() {
+            const name = document.getElementById('editGroupNameInput').value.trim();
+            const description = document.getElementById('editGroupDescriptionInput').value.trim();
+            
+            if (!name) {
+                alert('Название не может быть пустым');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('description', description);
+
+            try {
+                const response = await fetch(`/api/update_group_settings/${currentGroupId}`, { method: 'PUT', body: formData });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Настройки сохранены');
+                    document.getElementById('groupName').textContent = data.name; // Обновляем заголовок чата
+                    document.getElementById('settingsDesc').textContent = data.description || 'Описание отсутствует'; // Обновляем описание в модале
+                    currentGroupName = data.name; // Обновляем глобальную переменную
+                    await loadGroupChats(); // Обновляем список групп, чтобы изменения были видны
+                } else {
+                    alert(data.error || 'Ошибка сохранения');
+                }
+            } catch (error) {
+                console.error('Ошибка при сохранении настроек группы:', error);
+                alert('Ошибка при сохранении настроек группы.');
+            }
+        }
+
         // Кнопка назад
         document.getElementById('backBtn').addEventListener('click', () => {
             window.location.href = '/profile';
@@ -1114,6 +1373,7 @@
         window.addEventListener('load', () => {
             loadGroupChats();
             initEmojiPicker();
+            initWebSocket();
         });
 
         // Обновление списка групп каждые 3 секунды
