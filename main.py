@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, or_, and_, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import UniqueConstraint
 
 # 1. База данных
 DB_URL = "sqlite:///./users.db"
@@ -72,6 +73,7 @@ class GroupMember(Base):
     group_chat_id = Column(Integer, ForeignKey("group_chats.id"))
     user_id = Column(Integer, ForeignKey("users.id"))
     joined_at = Column(String)
+    __table_args__ = (UniqueConstraint('group_chat_id', 'user_id', name='_group_user_uc'),)
 
 
 class GroupMessage(Base):
@@ -852,6 +854,14 @@ def group_chat_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("group_chat.html", context={"request": request})
 
 
+@app.get('/api/emojis')
+def api_emojis():
+    return [
+        "😀", "😁", "😂", "🤣", "😊", "😍", "😘", "😎",
+        "🤔", "😢", "😭", "😡", "👍", "🙏", "🔥", "❤️"
+    ]
+
+
 @app.post('/api/create_group_chat')
 def api_create_group_chat(request: Request, name: str = Form(...), description: str = Form(...), avatar: str = Form(...), db: Session = Depends(get_db)):
     user_id = request.cookies.get("user_id")
@@ -1062,15 +1072,16 @@ def api_get_group_messages(group_chat_id: int, request: Request, db: Session = D
     if not member:
         return {"error": "Вы не в этой группе"}
     
-    # Получаем сообщения
-    messages = db.query(GroupMessage).filter(
+    # Получаем сообщения сразу вместе с данными отправителей (оптимизация)
+    messages_with_users = db.query(GroupMessage, User).outerjoin(
+        User, GroupMessage.sender_id == User.id
+    ).filter(
         GroupMessage.group_chat_id == group_chat_id,
         GroupMessage.is_deleted == False
     ).order_by(GroupMessage.id).all()
     
     result = []
-    for msg in messages:
-        sender = db.query(User).filter(User.id == msg.sender_id).first()
+    for msg, sender in messages_with_users:
         result.append({
             "id": msg.id,
             "text": encrypt(msg.text, key),
@@ -1097,15 +1108,31 @@ async def api_send_group_message(
 
     current_user_id = int(user_id)
     
-    # Проверяем, в группе ли текущий пользователь
+    # Проверяем существование группы и членство пользователя
+    group = db.query(GroupChat).filter(GroupChat.id == group_chat_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Группа не найдена")
+
     member = db.query(GroupMember).filter(
         GroupMember.group_chat_id == group_chat_id,
         GroupMember.user_id == current_user_id
     ).first()
     
     if not member:
-        return {"error": "Вы не в этой группе"}
+        raise HTTPException(status_code=403, detail="Вы не являетесь участником этой группы")
     
+    # Получаем информацию об отправителе заранее
+    sender = db.query(User).filter(User.id == current_user_id).first()
+    if not sender:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+    # --- Дополнительная проверка: не заблокирован ли отправитель в группе? ---
+    # В текущей схеме нет механизма блокировки внутри группы,
+    # но если бы он был, проверка шла бы здесь.
+    # Например, если бы GroupMember имел поле `is_muted` или `is_blocked_by_creator`.
+    # Поскольку такой логики нет, это не является причиной текущего бага.
+    # Но это место для потенциальных будущих проверок.
+
     # Создаём сообщение
     new_message = GroupMessage(
         group_chat_id=group_chat_id,
@@ -1119,31 +1146,31 @@ async def api_send_group_message(
     db.commit() # Commit to get the message ID
     db.refresh(new_message) # Refresh to ensure new_message.id is populated
     
-    # Получаем информацию об отправителе
-    sender = db.query(User).filter(User.id == current_user_id).first()
-    
-    # Уведомляем всех членов группы о новом сообщении
-    members = db.query(GroupMember).filter(GroupMember.group_chat_id == group_chat_id).all()
-    for member in members:
-        # Отправляем уведомление всем, включая отправителя
-        is_mine_for_recipient = (member.user_id == current_user_id)
-        await manager.send_notification(member.user_id, {
-            "type": "new_group_message",
-            "group_chat_id": group_chat_id,
-            "message": {
-                "id": new_message.id,
-                "text": text, # Отправляем расшифрованный текст для отображения
-                "timestamp": new_message.timestamp,
-                "sender_id": current_user_id,
-                "sender_username": sender.username,
-                "sender_avatar": sender.avatar,
-                "is_mine": is_mine_for_recipient
-            }
-        })
+    # Собираем данные для уведомления
+    notification_data = {
+        "type": "new_group_message",
+        "group_chat_id": group_chat_id,
+        "message": {
+            "id": new_message.id,
+            "text": text,
+            "timestamp": new_message.timestamp,
+            "sender_id": current_user_id,
+            "sender_username": sender.username,
+            "sender_avatar": sender.avatar
+        }
+    }
+
+    # Рассылаем уведомления в фоне, не дожидаясь завершения для каждого пользователя
+    import asyncio
+    members = db.query(GroupMember.user_id).filter(GroupMember.group_chat_id == group_chat_id).all()
+    for (m_id,) in members:
+        asyncio.create_task(manager.send_notification(m_id, {**notification_data, "message": {**notification_data["message"], "is_mine": m_id == current_user_id}}))
     
     return {
         "status": "ok",
-        "message_id": new_message.id
+        "message_id": new_message.id,
+        "timestamp": new_message.timestamp, # Include timestamp in response for immediate display on sender's side
+        "is_delivered": True # Indicate that it was delivered to the server
     }
 
 

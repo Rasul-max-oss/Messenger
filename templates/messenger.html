@@ -698,6 +698,9 @@
                 <button type="button" onclick="toggleEmojiPicker()" style="background:none;border:none;font-size:22px;cursor:pointer;">
                     😊
                 </button>
+                <button type="submit" title="Отправить">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
             </form>
         </div>
     </div>
@@ -749,8 +752,22 @@
     let EMOJIS = [];
 
     async function loadEmojis() {
-        const res = await fetch('/api/emojis');
-        EMOJIS = await res.json();
+        try {
+            const res = await fetch('/api/emojis', {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache' }
+            });
+
+            if (!res.ok) {
+                throw new Error('Emoji API unavailable');
+            }
+
+            const data = await res.json();
+            EMOJIS = Array.isArray(data) && data.length ? data : [];
+        } catch (e) {
+            console.error('Не удалось загрузить эмодзи с сервера, используем встроенный набор', e);
+            EMOJIS = ["😀", "😁", "😂", "🤣", "😊", "😍", "😘", "😎", "🤔", "😢", "😭", "😡", "👍", "🙏", "🔥", "❤️"];
+        }
     }
 
     function toggleEmojiPicker() {
@@ -760,6 +777,11 @@
             picker.style.display = 'block';
         } else {
             picker.style.display = 'none';
+            return;
+        }
+
+        if (!EMOJIS.length) {
+            picker.innerHTML = '<span style="color:#888;font-size:13px;">Эмодзи недоступны</span>';
             return;
         }
 
@@ -1099,8 +1121,15 @@
 
     // Загрузка сообщений
     async function loadMessages(chatId) {
-        const response = await fetch(`/api/messages/${chatId}`);
+        const response = await fetch(`/api/messages/${chatId}?_=${Date.now()}`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+        });
         const messages = await response.json();
+        if (!Array.isArray(messages)) {
+            console.error('Некорректный ответ /api/messages:', messages);
+            return;
+        }
 
         const container = document.getElementById('messagesContainer');
         const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
@@ -1329,8 +1358,9 @@
     }
 
     // Инициализация
-    document.addEventListener('DOMContentLoaded', () => {
-        loadChats();
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadEmojis();
+        await loadChats();
         initWebSocket();
     });
 
